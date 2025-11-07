@@ -230,7 +230,7 @@ const TestRuns = () => {
                           </div>
                           <div className="ml-4 flex-shrink-0 flex space-x-2">
                             <button
-                              onClick={() => navigate(`/test-runs/${run.id}/execute`)}
+                              onClick={() => navigate(`/test-runs/${run.id}`)}
                               className="px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                             >
                               Execute Tests

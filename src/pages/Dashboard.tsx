@@ -1,22 +1,101 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import type { TestCaseExecution } from '../types/testCase';
+import { testCasesService } from '../services/testCases';
+import { testRunsService } from '../services/testRuns';
+import { testCaseExecutionsService } from '../services/testCaseExecutions';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    totalTestCases: 0,
+    totalTestRuns: 0,
+    activeTestRuns: 0,
+    totalExecutions: 0,
+    passedExecutions: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      setLoading(true);
+      const [testCases, testRuns] = await Promise.all([
+        testCasesService.getAll(),
+        testRunsService.getAll(),
+      ]);
+
+      // Get all executions from all test runs
+      let allExecutions: TestCaseExecution[] = [];
+      for (const run of testRuns) {
+        const executions = await testCaseExecutionsService.getByTestRunId(run.id);
+        allExecutions = [...allExecutions, ...executions];
+      }
+
+      const activeRuns = testRuns.filter(tr => tr.status === 'In Progress').length;
+      const passedExecs = allExecutions.filter(e => e.status === 'Pass' && e.actualResult).length;
+
+      setStats({
+        totalTestCases: testCases.length,
+        totalTestRuns: testRuns.length,
+        activeTestRuns: activeRuns,
+        totalExecutions: allExecutions.filter(e => e.actualResult).length,
+        passedExecutions: passedExecs,
+      });
+    } catch (err) {
+      console.error('Error loading stats:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/login');
   };
 
+  const successRate = stats.totalExecutions > 0
+    ? Math.round((stats.passedExecutions / stats.totalExecutions) * 100)
+    : 0;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-8">
               <h1 className="text-xl font-bold text-gray-900">TestFrame</h1>
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="text-gray-900 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-blue-600"
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => navigate('/test-cases')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Test Cases
+                </button>
+                <button
+                  onClick={() => navigate('/test-runs')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Test Runs
+                </button>
+                <button
+                  onClick={() => navigate('/settings')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Settings
+                </button>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-700">{user?.email}</span>
@@ -57,7 +136,9 @@ const Dashboard = () => {
                       <dt className="text-sm font-medium text-gray-500 truncate">
                         Test Cases
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">0</dd>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {loading ? '...' : stats.totalTestCases}
+                      </dd>
                     </dl>
                   </div>
                 </div>
@@ -87,7 +168,9 @@ const Dashboard = () => {
                       <dt className="text-sm font-medium text-gray-500 truncate">
                         Test Runs
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">0</dd>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {loading ? '...' : `${stats.totalTestRuns} (${stats.activeTestRuns} active)`}
+                      </dd>
                     </dl>
                   </div>
                 </div>
@@ -117,7 +200,9 @@ const Dashboard = () => {
                       <dt className="text-sm font-medium text-gray-500 truncate">
                         Success Rate
                       </dt>
-                      <dd className="text-lg font-medium text-gray-900">0%</dd>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {loading ? '...' : `${successRate}%`}
+                      </dd>
                     </dl>
                   </div>
                 </div>
@@ -129,7 +214,7 @@ const Dashboard = () => {
             <h2 className="text-lg font-medium text-gray-900 mb-4">
               Quick Actions
             </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
               <button
                 onClick={() => navigate('/test-cases/new')}
                 className="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-12 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -149,6 +234,28 @@ const Dashboard = () => {
                 </svg>
                 <span className="mt-2 block text-sm font-medium text-gray-900">
                   Create Test Case
+                </span>
+              </button>
+
+              <button
+                onClick={() => navigate('/test-runs/new')}
+                className="relative block w-full border-2 border-gray-300 border-dashed rounded-lg p-12 text-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+                <span className="mt-2 block text-sm font-medium text-gray-900">
+                  Create Test Run
                 </span>
               </button>
 

@@ -5,7 +5,9 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TestCases from './pages/TestCases';
 import TestCaseForm from './pages/TestCaseForm';
+import TestRuns from './pages/TestRuns';
 import TestRunForm from './pages/TestRunForm';
+import TestRunExecution from './pages/TestRunExecution';
 import Settings from './pages/Settings';
 
 function App() {
@@ -47,10 +49,34 @@ function App() {
             }
           />
           <Route
-            path="/test-cases/:id/run"
+            path="/test-runs"
+            element={
+              <ProtectedRoute>
+                <TestRuns />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/test-runs/new"
             element={
               <ProtectedRoute>
                 <TestRunForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/test-runs/:id/edit"
+            element={
+              <ProtectedRoute>
+                <TestRunForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/test-runs/:id/execute"
+            element={
+              <ProtectedRoute>
+                <TestRunExecution />
               </ProtectedRoute>
             }
           />

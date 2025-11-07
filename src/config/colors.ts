@@ -37,6 +37,7 @@ export const colors = {
     text: 'text-emerald-600',
     badge: 'bg-emerald-100 text-emerald-800',
     badgeLight: 'bg-emerald-200 text-emerald-700',
+    ring: 'focus:ring-emerald-400',
   },
 
   // Danger - Pastel red/rose
@@ -85,16 +86,16 @@ export const colors = {
       text: 'text-blue-700',
     },
     completed: {
-      bg: 'bg-emerald-200',
-      text: 'text-emerald-700',
+      bg: 'bg-emerald-800',
+      text: 'text-stone-100',
     },
   },
 
   // Test execution results
   testResults: {
     pass: {
-      text: 'text-emerald-600',
-      badge: 'bg-emerald-100 text-emerald-800',
+      text: 'text-stone-100',
+      badge: 'bg-emerald-800 text-stone-100',
     },
     fail: {
       text: 'text-rose-600',
@@ -122,7 +123,7 @@ export const colors = {
       badge: 'bg-amber-100 text-amber-800',
     },
     p3: {
-      badge: 'bg-emerald-100 text-emerald-800',
+      badge: 'bg-emerald-800 text-white',
     },
   },
 

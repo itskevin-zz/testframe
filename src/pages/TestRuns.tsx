@@ -224,7 +224,7 @@ const TestRuns = () => {
                           <div className="ml-4 flex-shrink-0 flex space-x-2">
                             <button
                               onClick={() => navigate(`/test-runs/${run.id}`)}
-                              className={`px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${colors.success.bg} hover:${colors.success.bgHover} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-400`}
+                              className={`px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${colors.success.bg} hover:${colors.success.bgHover} focus:outline-none focus:ring-2 focus:ring-offset-2 ${colors.success.ring}`}
                             >
                               Execute Tests
                             </button>

@@ -3,17 +3,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { TestCase, TestRun } from '../types/testCase';
+import type { TestCase, TestCaseExecution } from '../types/testCase';
 import { testCasesService } from '../services/testCases';
-import { testRunsService } from '../services/testRuns';
+import { testCaseExecutionsService } from '../services/testCaseExecutions';
 
 const TestCases = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [testCases, setTestCases] = useState<TestCase[]>([]);
-  const [testRuns, setTestRuns] = useState<TestRun[]>([]);
   const [selectedTestCase, setSelectedTestCase] = useState<TestCase | null>(null);
-  const [selectedTestCaseRuns, setSelectedTestCaseRuns] = useState<TestRun[]>([]);
+  const [selectedTestCaseExecutions, setSelectedTestCaseExecutions] = useState<TestCaseExecution[]>([]);
   const [filterComponent, setFilterComponent] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [loading, setLoading] = useState(true);
@@ -27,12 +26,8 @@ const TestCases = () => {
     try {
       setLoading(true);
       setError(null);
-      const [cases, runs] = await Promise.all([
-        testCasesService.getAll(),
-        testRunsService.getAll(),
-      ]);
+      const cases = await testCasesService.getAll();
       setTestCases(cases);
-      setTestRuns(runs);
     } catch (err) {
       console.error('Error loading data:', err);
       setError('Failed to load test cases. Please try again.');
@@ -43,16 +38,16 @@ const TestCases = () => {
 
   useEffect(() => {
     if (selectedTestCase) {
-      loadTestCaseRuns(selectedTestCase.id);
+      loadTestCaseExecutions(selectedTestCase.id);
     }
   }, [selectedTestCase]);
 
-  const loadTestCaseRuns = async (testCaseId: string) => {
+  const loadTestCaseExecutions = async (testCaseId: string) => {
     try {
-      const runs = await testRunsService.getByTestCaseId(testCaseId);
-      setSelectedTestCaseRuns(runs);
+      const executions = await testCaseExecutionsService.getByTestCaseId(testCaseId);
+      setSelectedTestCaseExecutions(executions);
     } catch (err) {
-      console.error('Error loading test runs:', err);
+      console.error('Error loading test case executions:', err);
     }
   };
 
@@ -61,15 +56,6 @@ const TestCases = () => {
     navigate('/login');
   };
 
-  const getTestRunsForCase = (testCaseId: string) => {
-    return testRuns.filter(run => run.testCaseId === testCaseId);
-  };
-
-  const getLatestTestRun = (testCaseId: string): TestRun | undefined => {
-    const runs = getTestRunsForCase(testCaseId);
-    if (runs.length === 0) return undefined;
-    return runs.sort((a, b) => b.testRunDate.getTime() - a.testRunDate.getTime())[0];
-  };
 
   const filteredTestCases = testCases.filter(tc => {
     if (filterComponent !== 'all' && tc.component !== filterComponent) return false;
@@ -239,9 +225,7 @@ const TestCases = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredTestCases.map((testCase) => {
-                    const latestRun = getLatestTestRun(testCase.id);
-                    return (
+                  {filteredTestCases.map((testCase) => (
                       <tr
                         key={testCase.id}
                         onClick={() => setSelectedTestCase(testCase)}
@@ -270,18 +254,7 @@ const TestCases = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {latestRun ? (
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              latestRun.status === 'Pass' ? 'bg-green-100 text-green-800' :
-                              latestRun.status === 'Fail' ? 'bg-red-100 text-red-800' :
-                              latestRun.status === 'Blocked' ? 'bg-gray-100 text-gray-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {latestRun.status}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">Not run</span>
-                          )}
+                          <span className="text-gray-400">View details for status</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
@@ -304,8 +277,7 @@ const TestCases = () => {
                           </button>
                         </td>
                       </tr>
-                    );
-                  })}
+                    ))}
                 </tbody>
               </table>
             )}
@@ -367,38 +339,38 @@ const TestCases = () => {
                 </div>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-500">Test Run History</h4>
+                <h4 className="text-sm font-medium text-gray-500">Execution History</h4>
                 <div className="mt-2">
-                  {selectedTestCaseRuns.length === 0 ? (
-                    <p className="text-sm text-gray-500">No test runs yet</p>
+                  {selectedTestCaseExecutions.length === 0 ? (
+                    <p className="text-sm text-gray-500">No executions yet</p>
                   ) : (
                     <div className="space-y-2">
-                      {selectedTestCaseRuns.map(run => (
-                          <div key={run.id} className="border border-gray-200 rounded p-3">
+                      {selectedTestCaseExecutions.map(execution => (
+                          <div key={execution.id} className="border border-gray-200 rounded p-3">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2">
                                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    run.status === 'Pass' ? 'bg-green-100 text-green-800' :
-                                    run.status === 'Fail' ? 'bg-red-100 text-red-800' :
-                                    run.status === 'Blocked' ? 'bg-gray-100 text-gray-800' :
+                                    execution.status === 'Pass' ? 'bg-green-100 text-green-800' :
+                                    execution.status === 'Fail' ? 'bg-red-100 text-red-800' :
+                                    execution.status === 'Blocked' ? 'bg-gray-100 text-gray-800' :
                                     'bg-yellow-100 text-yellow-800'
                                   }`}>
-                                    {run.status}
+                                    {execution.status}
                                   </span>
                                   <span className="text-xs text-gray-500">
-                                    {run.testRunDate.toLocaleString()}
+                                    {execution.executionDate.toLocaleString()}
                                   </span>
                                 </div>
-                                <p className="mt-1 text-sm text-gray-600">By: {run.testedBy}</p>
-                                {run.actualResult && (
+                                <p className="mt-1 text-sm text-gray-600">By: {execution.testedBy}</p>
+                                {execution.actualResult && (
                                   <div className="mt-1 text-sm text-gray-900 prose prose-sm max-w-none">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{run.actualResult}</ReactMarkdown>
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{execution.actualResult}</ReactMarkdown>
                                   </div>
                                 )}
-                                {run.notes && (
+                                {execution.notes && (
                                   <div className="mt-1 text-sm text-gray-600 italic prose prose-sm max-w-none">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{run.notes}</ReactMarkdown>
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{execution.notes}</ReactMarkdown>
                                   </div>
                                 )}
                               </div>

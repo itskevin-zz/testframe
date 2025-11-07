@@ -1,6 +1,5 @@
 import {
   collection,
-  addDoc,
   getDocs,
   getDoc,
   updateDoc,
@@ -9,6 +8,7 @@ import {
   query,
   orderBy,
   Timestamp,
+  setDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { TestRun } from '../types/testCase';
@@ -91,7 +91,7 @@ export const testRunsService = {
   // Create a new test run
   async create(testRun: TestRun): Promise<string> {
     try {
-      const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+      await setDoc(doc(db, COLLECTION_NAME, testRun.id), {
         id: testRun.id,
         name: testRun.name,
         description: testRun.description || '',
@@ -100,7 +100,7 @@ export const testRunsService = {
         updatedAt: Timestamp.now(),
         status: testRun.status,
       });
-      return docRef.id;
+      return testRun.id;
     } catch (error) {
       console.error('Error creating test run:', error);
       throw error;

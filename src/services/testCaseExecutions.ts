@@ -8,7 +8,6 @@ import {
   doc,
   query,
   where,
-  orderBy,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -22,12 +21,11 @@ export const testCaseExecutionsService = {
     try {
       const q = query(
         collection(db, COLLECTION_NAME),
-        where('testRunId', '==', testRunId),
-        orderBy('executionDate', 'desc')
+        where('testRunId', '==', testRunId)
       );
       const querySnapshot = await getDocs(q);
 
-      return querySnapshot.docs.map(doc => {
+      const results = querySnapshot.docs.map(doc => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -40,6 +38,11 @@ export const testCaseExecutionsService = {
           notes: data.notes,
         };
       });
+
+      // Sort by executionDate in memory instead of in query
+      results.sort((a, b) => b.executionDate.getTime() - a.executionDate.getTime());
+
+      return results;
     } catch (error) {
       console.error('Error fetching test case executions:', error);
       throw error;
@@ -51,12 +54,11 @@ export const testCaseExecutionsService = {
     try {
       const q = query(
         collection(db, COLLECTION_NAME),
-        where('testCaseId', '==', testCaseId),
-        orderBy('executionDate', 'desc')
+        where('testCaseId', '==', testCaseId)
       );
       const querySnapshot = await getDocs(q);
 
-      return querySnapshot.docs.map(doc => {
+      const results = querySnapshot.docs.map(doc => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -69,6 +71,11 @@ export const testCaseExecutionsService = {
           notes: data.notes,
         };
       });
+
+      // Sort by executionDate in memory instead of in query
+      results.sort((a, b) => b.executionDate.getTime() - a.executionDate.getTime());
+
+      return results;
     } catch (error) {
       console.error('Error fetching test case executions:', error);
       throw error;

@@ -8,6 +8,7 @@ import TestCaseForm from './pages/TestCaseForm';
 import TestRuns from './pages/TestRuns';
 import TestRunForm from './pages/TestRunForm';
 import TestRunExecution from './pages/TestRunExecution';
+import TestRunDetails from './pages/TestRunDetails';
 import Settings from './pages/Settings';
 
 function App() {
@@ -77,6 +78,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <TestRunExecution />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/test-runs/:id"
+            element={
+              <ProtectedRoute>
+                <TestRunDetails />
               </ProtectedRoute>
             }
           />

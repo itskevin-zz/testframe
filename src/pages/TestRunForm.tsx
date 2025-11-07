@@ -165,7 +165,7 @@ const TestRunForm = () => {
             testRunId: testRun.id,
             testCaseId,
             actualResult: '',
-            status: 'Skip',
+            status: 'Skip' as const,
             testedBy: '',
             executionDate: new Date(),
             notes: '',

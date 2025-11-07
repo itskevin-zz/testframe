@@ -126,6 +126,12 @@ const TestCaseForm = () => {
                   Test Cases
                 </button>
                 <button
+                  onClick={() => navigate('/test-runs')}
+                  className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Test Runs
+                </button>
+                <button
                   onClick={() => navigate('/settings')}
                   className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium"
                 >

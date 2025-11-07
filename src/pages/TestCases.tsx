@@ -395,17 +395,8 @@ const TestCases = () => {
             </div>
             <div className="px-6 py-4 border-t border-slate-200 flex justify-end space-x-3">
               <button
-                onClick={() => {
-                  setSelectedTestCase(null);
-                  navigate(`/test-cases/${selectedTestCase.id}/run`);
-                }}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-400 hover:bg-emerald-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-300"
-              >
-                Run Test
-              </button>
-              <button
                 onClick={() => setSelectedTestCase(null)}
-                className="px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500"
+                className="px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-white bg-rose-400 hover:bg-rose-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500"
               >
                 Close
               </button>

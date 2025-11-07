@@ -32,9 +32,9 @@ export const colors = {
 
   // Success - Pastel green
   success: {
-    bg: 'bg-emerald-400',
+    bg: 'bg-emerald-800',
     bgHover: 'bg-emerald-500',
-    text: 'text-emerald-600',
+    text: 'text-white',
     badge: 'bg-emerald-100 text-emerald-800',
     badgeLight: 'bg-emerald-200 text-emerald-700',
     ring: 'focus:ring-emerald-400',
@@ -94,7 +94,7 @@ export const colors = {
   // Test execution results
   testResults: {
     pass: {
-      text: 'text-stone-100',
+      text: 'text-emerald-800',
       badge: 'bg-emerald-800 text-stone-100',
     },
     fail: {

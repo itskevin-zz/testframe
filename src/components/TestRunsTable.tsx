@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { TestRun } from '../types/testCase';
 import { testRunsService } from '../services/testRuns';
 import { testCaseExecutionsService } from '../services/testCaseExecutions';
+import { colors, colorHelpers } from '../config/colors';
 
 interface TestRunWithStats extends TestRun {
   totalTests: number;
@@ -51,24 +52,6 @@ const TestRunsTable = () => {
     }
   };
 
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case 'Completed':
-        return 'bg-green-100 text-green-800';
-      case 'In Progress':
-        return 'bg-blue-100 text-blue-800';
-      case 'Not Started':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getPassRateColor = (passRate: number) => {
-    if (passRate >= 80) return 'text-green-600';
-    if (passRate >= 50) return 'text-yellow-600';
-    return 'text-red-600';
-  };
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -84,11 +67,11 @@ const TestRunsTable = () => {
     return (
       <div className="bg-white shadow rounded-lg p-6">
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className={`h-4 ${colors.secondary.skeleton} rounded w-1/4 mb-4`}></div>
           <div className="space-y-3">
-            <div className="h-8 bg-gray-200 rounded"></div>
-            <div className="h-8 bg-gray-200 rounded"></div>
-            <div className="h-8 bg-gray-200 rounded"></div>
+            <div className={`h-8 ${colors.secondary.skeleton} rounded`}></div>
+            <div className={`h-8 ${colors.secondary.skeleton} rounded`}></div>
+            <div className={`h-8 ${colors.secondary.skeleton} rounded`}></div>
           </div>
         </div>
       </div>
@@ -98,10 +81,10 @@ const TestRunsTable = () => {
   if (testRuns.length === 0) {
     return (
       <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Test Runs</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-4">Recent Test Runs</h3>
         <div className="text-center py-12">
           <svg
-            className="mx-auto h-12 w-12 text-gray-400"
+            className="mx-auto h-12 w-12 text-slate-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -113,14 +96,14 @@ const TestRunsTable = () => {
               d="M13 10V3L4 14h7v7l9-11h-7z"
             />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No test runs</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="mt-2 text-sm font-medium text-slate-900">No test runs</h3>
+          <p className="mt-1 text-sm text-slate-500">
             Get started by creating a new test run.
           </p>
           <div className="mt-6">
             <button
               onClick={() => navigate('/test-runs/new')}
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className={`inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white ${colors.primary.bg} hover:${colors.primary.bgHover} focus:outline-none focus:ring-2 focus:ring-offset-2 ${colors.primary.ring}`}
             >
               Create Test Run
             </button>
@@ -132,46 +115,46 @@ const TestRunsTable = () => {
 
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-900">Recent Test Runs</h3>
+      <div className="px-6 py-4 border-b border-slate-200">
+        <h3 className="text-lg font-medium text-slate-900">Recent Test Runs</h3>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-slate-200">
+          <thead className="bg-slate-50">
             <tr>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
               >
                 ID
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
               >
                 Name
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
               >
                 Created By
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
               >
                 Created At
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
               >
                 Status
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
               >
                 Pass Rate
               </th>
@@ -180,35 +163,33 @@ const TestRunsTable = () => {
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-slate-200">
             {testRuns.map((run) => (
               <tr
                 key={run.id}
-                className="hover:bg-gray-50 cursor-pointer"
+                className="hover:bg-slate-50 cursor-pointer"
                 onClick={() => navigate(`/test-runs/${run.id}`)}
               >
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                   {run.id}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{run.name}</div>
+                  <div className="text-sm font-medium text-slate-900">{run.name}</div>
                   {run.description && (
-                    <div className="text-sm text-gray-500 truncate max-w-xs">
+                    <div className="text-sm text-slate-500 truncate max-w-xs">
                       {run.description}
                     </div>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                   {run.createdBy}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                   {formatDate(run.createdAt)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(
-                      run.status
-                    )}`}
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${colorHelpers.getStatusBadge(run.status).bg} ${colorHelpers.getStatusBadge(run.status).text}`}
                   >
                     {run.status}
                   </span>
@@ -216,15 +197,15 @@ const TestRunsTable = () => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   {run.totalTests > 0 ? (
                     <div className="text-sm">
-                      <span className={`font-semibold ${getPassRateColor(run.passRate)}`}>
+                      <span className={`font-semibold ${colorHelpers.getPassRateColor(run.passRate)}`}>
                         {run.passRate}%
                       </span>
-                      <span className="text-gray-500 ml-1">
+                      <span className="text-slate-500 ml-1">
                         ({run.passedTests}/{run.totalTests})
                       </span>
                     </div>
                   ) : (
-                    <span className="text-sm text-gray-400">No tests executed</span>
+                    <span className="text-sm text-slate-400">No tests executed</span>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -233,7 +214,7 @@ const TestRunsTable = () => {
                       e.stopPropagation();
                       navigate(`/test-runs/${run.id}`);
                     }}
-                    className="text-blue-600 hover:text-blue-900"
+                    className="text-stone-500 hover:text-stone-700"
                   >
                     View
                   </button>

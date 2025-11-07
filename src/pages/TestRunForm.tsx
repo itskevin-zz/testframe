@@ -6,6 +6,7 @@ import { testRunsService } from '../services/testRuns';
 import { testCasesService } from '../services/testCases';
 import { testRunTemplatesService } from '../services/testRunTemplates';
 import { testCaseExecutionsService } from '../services/testCaseExecutions';
+import { colors, colorHelpers } from '../config/colors';
 
 const TestRunForm = () => {
   const { user, signOut } = useAuth();
@@ -187,7 +188,7 @@ const TestRunForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
@@ -201,35 +202,35 @@ const TestRunForm = () => {
               <div className="flex space-x-4">
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Dashboard
                 </button>
                 <button
                   onClick={() => navigate('/test-cases')}
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Test Cases
                 </button>
                 <button
                   onClick={() => navigate('/test-runs')}
-                  className="text-gray-900 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-blue-600"
+                  className="text-slate-900 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-stone-500"
                 >
                   Test Runs
                 </button>
                 <button
                   onClick={() => navigate('/settings')}
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Settings
                 </button>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">{user?.email}</span>
+              <span className="text-sm text-slate-700">{user?.email}</span>
               <button
                 onClick={handleSignOut}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${colors.danger.bg} hover:${colors.danger.bgHover} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-300`}
               >
                 Sign Out
               </button>
@@ -241,13 +242,13 @@ const TestRunForm = () => {
       <main className="max-w-6xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-slate-900">
               {isEdit ? 'Edit Test Run' : 'Create Test Run'}
             </h2>
           </div>
 
           {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className={`mb-4 ${colors.danger.bgLight} border ${colors.danger.border} ${colors.danger.textDark} px-4 py-3 rounded`}>
               {error}
             </div>
           )}
@@ -255,17 +256,17 @@ const TestRunForm = () => {
           {loading ? (
             <div className="bg-white shadow rounded-lg p-12">
               <div className="text-center">
-                <p className="text-gray-500">Loading...</p>
+                <p className="text-slate-500">Loading...</p>
               </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Test Run Details</h3>
+                <h3 className="text-lg font-medium text-slate-900 mb-4">Test Run Details</h3>
 
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="name" className="block text-sm font-medium text-slate-700">
                       Name *
                     </label>
                     <input
@@ -274,13 +275,13 @@ const TestRunForm = () => {
                       required
                       value={formData.name}
                       onChange={(e) => handleChange('name', e.target.value)}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className={`mt-1 block w-full border ${colors.form.input} rounded-md shadow-sm py-2 px-3 focus:outline-none ${colors.form.inputFocus} sm:text-sm`}
                       placeholder="e.g., Release 2.5.0, Sprint 10 Testing"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="description" className="block text-sm font-medium text-slate-700">
                       Description
                     </label>
                     <textarea
@@ -288,13 +289,13 @@ const TestRunForm = () => {
                       rows={3}
                       value={formData.description}
                       onChange={(e) => handleChange('description', e.target.value)}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className={`mt-1 block w-full border ${colors.form.input} rounded-md shadow-sm py-2 px-3 focus:outline-none ${colors.form.inputFocus} sm:text-sm`}
                       placeholder="Optional description of this test run"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="status" className="block text-sm font-medium text-slate-700">
                       Status *
                     </label>
                     <select
@@ -302,7 +303,7 @@ const TestRunForm = () => {
                       required
                       value={formData.status}
                       onChange={(e) => handleChange('status', e.target.value as TestRun['status'])}
-                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border"
+                      className={`mt-1 block w-full pl-3 pr-10 py-2 text-base ${colors.form.input} border focus:outline-none ${colors.form.inputFocus} sm:text-sm rounded-md`}
                     >
                       <option value="Not Started">Not Started</option>
                       <option value="In Progress">In Progress</option>
@@ -314,19 +315,19 @@ const TestRunForm = () => {
 
               <div className="bg-white shadow rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">Select Test Cases</h3>
+                  <h3 className="text-lg font-medium text-slate-900">Select Test Cases</h3>
                   <div className="flex space-x-2">
                     <button
                       type="button"
                       onClick={handleSelectAll}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
+                      className="px-3 py-1 text-sm border border-slate-300 rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50"
                     >
                       Select All
                     </button>
                     <button
                       type="button"
                       onClick={handleDeselectAll}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50"
+                      className="px-3 py-1 text-sm border border-slate-300 rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50"
                     >
                       Deselect All
                     </button>
@@ -335,14 +336,14 @@ const TestRunForm = () => {
 
                 {!isEdit && templates.length > 0 && (
                   <div className="mb-4">
-                    <label htmlFor="template" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="template" className="block text-sm font-medium text-slate-700">
                       Load from Template
                     </label>
                     <select
                       id="template"
                       value={selectedTemplate}
                       onChange={(e) => handleTemplateChange(e.target.value)}
-                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border"
+                      className={`mt-1 block w-full pl-3 pr-10 py-2 text-base ${colors.form.input} border focus:outline-none ${colors.form.inputFocus} sm:text-sm rounded-md`}
                     >
                       <option value="">-- Select a template --</option>
                       {templates.map(template => (
@@ -354,66 +355,61 @@ const TestRunForm = () => {
                   </div>
                 )}
 
-                <div className="text-sm text-gray-600 mb-3">
+                <div className="text-sm text-slate-600 mb-3">
                   Selected: {selectedTestCases.size} test case{selectedTestCases.size !== 1 ? 's' : ''}
                 </div>
 
                 {allTestCases.length === 0 ? (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-slate-500">
                     No test cases available. Create test cases first.
                   </p>
                 ) : (
-                  <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-md">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50 sticky top-0">
+                  <div className="max-h-96 overflow-y-auto border border-slate-200 rounded-md">
+                    <table className="min-w-full divide-y divide-slate-200">
+                      <thead className="bg-slate-50 sticky top-0">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                             Select
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                             ID
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                             Component
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                             Feature
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                             Priority
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
+                      <tbody className="bg-white divide-y divide-slate-200">
                         {allTestCases.map(testCase => (
                           <tr
                             key={testCase.id}
-                            className={selectedTestCases.has(testCase.id) ? 'bg-blue-50' : 'hover:bg-gray-50'}
+                            className={selectedTestCases.has(testCase.id) ? colors.background.selected : colors.background.hover}
                           >
                             <td className="px-4 py-3 whitespace-nowrap">
                               <input
                                 type="checkbox"
                                 checked={selectedTestCases.has(testCase.id)}
                                 onChange={() => handleTestCaseToggle(testCase.id)}
-                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                className="h-4 w-4 text-stone-600 focus:ring-stone-500 border-slate-300 rounded"
                               />
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900">
                               {testCase.id}
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-500">
                               {testCase.component}
                             </td>
-                            <td className="px-4 py-3 text-sm text-gray-500">
+                            <td className="px-4 py-3 text-sm text-slate-500">
                               {testCase.feature}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                testCase.priority === 'P0' ? 'bg-red-100 text-red-800' :
-                                testCase.priority === 'P1' ? 'bg-orange-100 text-orange-800' :
-                                testCase.priority === 'P2' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-green-100 text-green-800'
-                              }`}>
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${colorHelpers.getPriorityBadge(testCase.priority)}`}>
                                 {testCase.priority}
                               </span>
                             </td>
@@ -430,14 +426,14 @@ const TestRunForm = () => {
                   type="button"
                   onClick={() => navigate('/test-runs')}
                   disabled={saving}
-                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${colors.primary.bg} hover:${colors.primary.bgHover} focus:outline-none focus:ring-2 focus:ring-offset-2 ${colors.primary.ring} disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {saving ? 'Saving...' : (isEdit ? 'Update Test Run' : 'Create Test Run')}
                 </button>

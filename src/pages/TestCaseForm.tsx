@@ -106,7 +106,7 @@ const TestCaseForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
@@ -115,29 +115,29 @@ const TestCaseForm = () => {
               <div className="flex space-x-4">
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Dashboard
                 </button>
                 <button
                   onClick={() => navigate('/test-cases')}
-                  className="text-gray-900 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-blue-600"
+                  className="text-slate-900 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-stone-500"
                 >
                   Test Cases
                 </button>
                 <button
                   onClick={() => navigate('/settings')}
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Settings
                 </button>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">{user?.email}</span>
+              <span className="text-sm text-slate-700">{user?.email}</span>
               <button
                 onClick={handleSignOut}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-rose-400 hover:bg-rose-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-300"
               >
                 Sign Out
               </button>
@@ -149,13 +149,13 @@ const TestCaseForm = () => {
       <main className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-slate-900">
               {isEdit ? 'Edit Test Case' : 'Create Test Case'}
             </h2>
           </div>
 
           {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="mb-4 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded">
               {error}
             </div>
           )}
@@ -163,7 +163,7 @@ const TestCaseForm = () => {
           {loading ? (
             <div className="bg-white shadow rounded-lg p-12">
               <div className="text-center">
-                <p className="text-gray-500">Loading...</p>
+                <p className="text-slate-500">Loading...</p>
               </div>
             </div>
           ) : (
@@ -171,7 +171,7 @@ const TestCaseForm = () => {
             <div className="px-4 py-5 sm:p-6 space-y-6">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="component" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="component" className="block text-sm font-medium text-slate-700">
                     Component *
                   </label>
                   <select
@@ -179,7 +179,7 @@ const TestCaseForm = () => {
                     required
                     value={formData.component}
                     onChange={(e) => handleChange('component', e.target.value)}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border"
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-stone-500 focus:border-stone-500 sm:text-sm rounded-md border"
                   >
                     <option value="">Select a component</option>
                     {components.map(comp => (
@@ -201,7 +201,7 @@ const TestCaseForm = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="testType" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="testType" className="block text-sm font-medium text-slate-700">
                     Test Type *
                   </label>
                   <select
@@ -209,7 +209,7 @@ const TestCaseForm = () => {
                     required
                     value={formData.testType}
                     onChange={(e) => handleChange('testType', e.target.value as TestType)}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border"
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-stone-500 focus:border-stone-500 sm:text-sm rounded-md border"
                   >
                     <option value="Functional">Functional</option>
                     <option value="Integration">Integration</option>
@@ -221,7 +221,7 @@ const TestCaseForm = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="priority" className="block text-sm font-medium text-slate-700">
                     Priority *
                   </label>
                   <select
@@ -229,7 +229,7 @@ const TestCaseForm = () => {
                     required
                     value={formData.priority}
                     onChange={(e) => handleChange('priority', e.target.value as Priority)}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border"
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-stone-500 focus:border-stone-500 sm:text-sm rounded-md border"
                   >
                     <option value="P0">P0 - Critical</option>
                     <option value="P1">P1 - High</option>
@@ -240,7 +240,7 @@ const TestCaseForm = () => {
               </div>
 
               <div>
-                <label htmlFor="feature" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="feature" className="block text-sm font-medium text-slate-700">
                   Feature *
                 </label>
                 <input
@@ -249,14 +249,14 @@ const TestCaseForm = () => {
                   required
                   value={formData.feature}
                   onChange={(e) => handleChange('feature', e.target.value)}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-stone-500 focus:border-stone-500 sm:text-sm"
                   placeholder="e.g., New student user registration via email link"
                 />
               </div>
 
               <div>
-                <label htmlFor="preconditions" className="block text-sm font-medium text-gray-700">
-                  Preconditions * <span className="text-gray-400 font-normal">(Markdown supported)</span>
+                <label htmlFor="preconditions" className="block text-sm font-medium text-slate-700">
+                  Preconditions * <span className="text-slate-400 font-normal">(Markdown supported)</span>
                 </label>
                 <textarea
                   id="preconditions"
@@ -264,17 +264,17 @@ const TestCaseForm = () => {
                   rows={4}
                   value={formData.preconditions}
                   onChange={(e) => handleChange('preconditions', e.target.value)}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                  className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-stone-500 focus:border-stone-500 sm:text-sm font-mono"
                   placeholder="- Student email does not exist&#10;- Valid email link received&#10;- Use **bold** or *italic* for emphasis"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-slate-500">
                   Supports Markdown: **bold**, *italic*, lists, links, etc.
                 </p>
               </div>
 
               <div>
-                <label htmlFor="testSteps" className="block text-sm font-medium text-gray-700">
-                  Test Steps * <span className="text-gray-400 font-normal">(Markdown supported)</span>
+                <label htmlFor="testSteps" className="block text-sm font-medium text-slate-700">
+                  Test Steps * <span className="text-slate-400 font-normal">(Markdown supported)</span>
                 </label>
                 <textarea
                   id="testSteps"
@@ -282,17 +282,17 @@ const TestCaseForm = () => {
                   rows={8}
                   value={formData.testSteps}
                   onChange={(e) => handleChange('testSteps', e.target.value)}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                  className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-stone-500 focus:border-stone-500 sm:text-sm font-mono"
                   placeholder="1. Click on **email invitation link**&#10;2. Enter valid phone number (e.g., `+1-416-555-0123`)&#10;3. Enter name&#10;..."
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-slate-500">
                   Use numbered lists, **bold** for UI elements, `code` for values
                 </p>
               </div>
 
               <div>
-                <label htmlFor="expectedResult" className="block text-sm font-medium text-gray-700">
-                  Expected Result * <span className="text-gray-400 font-normal">(Markdown supported)</span>
+                <label htmlFor="expectedResult" className="block text-sm font-medium text-slate-700">
+                  Expected Result * <span className="text-slate-400 font-normal">(Markdown supported)</span>
                 </label>
                 <textarea
                   id="expectedResult"
@@ -300,28 +300,28 @@ const TestCaseForm = () => {
                   rows={6}
                   value={formData.expectedResult}
                   onChange={(e) => handleChange('expectedResult', e.target.value)}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                  className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-stone-500 focus:border-stone-500 sm:text-sm font-mono"
                   placeholder="- Phone validation **passes**&#10;- SMS sent within `30 seconds`&#10;- User record created with:&#10;  - email, phone, name populated&#10;  - status = `active`"
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-slate-500">
                   Use lists, **bold** for important items, `code` for values
                 </p>
               </div>
             </div>
 
-            <div className="px-4 py-3 bg-gray-50 text-right sm:px-6 space-x-3 rounded-b-lg">
+            <div className="px-4 py-3 bg-slate-50 text-right sm:px-6 space-x-3 rounded-b-lg">
               <button
                 type="button"
                 onClick={() => navigate('/test-cases')}
                 disabled={saving}
-                className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex justify-center py-2 px-4 border border-slate-300 shadow-sm text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-stone-500 hover:bg-stone-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? 'Saving...' : (isEdit ? 'Update Test Case' : 'Create Test Case')}
               </button>

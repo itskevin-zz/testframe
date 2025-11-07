@@ -156,7 +156,7 @@ const Settings = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-8">
-              <h1 className="text-xl font-bold text-gray-900">TestFrame</h1>
+              <button onClick={() => navigate('/dashboard')} className="focus:outline-none"><img src="/logo.png" alt="TestFrame" className="h-10" /></button>
               <div className="flex space-x-4">
                 <button
                   onClick={() => navigate('/dashboard')}

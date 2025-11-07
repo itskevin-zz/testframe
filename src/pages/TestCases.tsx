@@ -71,7 +71,12 @@ const TestCases = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-8">
-              <h1 className="text-xl font-bold text-gray-900">TestFrame</h1>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="focus:outline-none"
+              >
+                <img src="/logo.png" alt="TestFrame" className="h-10" />
+              </button>
               <div className="flex space-x-4">
                 <button
                   onClick={() => navigate('/dashboard')}
@@ -84,6 +89,12 @@ const TestCases = () => {
                   className="text-gray-900 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-blue-600"
                 >
                   Test Cases
+                </button>
+                <button
+                  onClick={() => navigate('/test-runs')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Test Runs
                 </button>
                 <button
                   onClick={() => navigate('/settings')}

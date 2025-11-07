@@ -5,6 +5,7 @@ import type { TestCaseExecution } from '../types/testCase';
 import { testCasesService } from '../services/testCases';
 import { testRunsService } from '../services/testRuns';
 import { testCaseExecutionsService } from '../services/testCaseExecutions';
+import TestRunsTable from '../components/TestRunsTable';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -309,6 +310,10 @@ const Dashboard = () => {
                 </span>
               </button>
             </div>
+          </div>
+
+          <div className="mt-8">
+            <TestRunsTable />
           </div>
         </div>
       </main>

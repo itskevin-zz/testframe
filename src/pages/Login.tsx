@@ -1,12 +1,25 @@
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { useState } from 'react';
 
 const Login = () => {
-  const { user, signInWithGoogle } = useAuth();
+  const { user, signInWithGoogle, error } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
   if (user) {
     return <Navigate to="/dashboard" />;
   }
+
+  const handleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch {
+      // Error is handled by AuthContext and displayed via error state
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -19,11 +32,17 @@ const Login = () => {
             Simplify your test case management
           </p>
         </div>
+        {error && (
+          <div className="rounded-md bg-red-50 p-4">
+            <p className="text-sm font-medium text-red-800">{error}</p>
+          </div>
+        )}
         <button
-          onClick={signInWithGoogle}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-stone-500 hover:bg-stone-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500 transition-colors"
+          onClick={handleSignIn}
+          disabled={isLoading}
+          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-stone-500 hover:bg-stone-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Sign in with Google
+          {isLoading ? 'Signing in...' : 'Sign in with Google'}
         </button>
       </div>
     </div>

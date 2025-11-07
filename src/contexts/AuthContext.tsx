@@ -13,9 +13,17 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const ALLOWED_DOMAINS = ['getaddie.com'];
+
+// Helper function to check if email is from allowed domain
+const isEmailAllowed = (email: string): boolean => {
+  const emailDomain = email.split('@')[1]?.toLowerCase();
+  return ALLOWED_DOMAINS.includes(emailDomain);
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -32,10 +40,23 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+      if (authUser) {
+        // Verify email domain on sign in
+        if (!isEmailAllowed(authUser.email || '')) {
+          // Sign out user with unauthorized domain
+          await firebaseSignOut(auth);
+          setUser(null);
+          setError('Only @getaddie.com email addresses are allowed');
+          setLoading(false);
+          return;
+        }
+      }
+      setUser(authUser);
+      setError(null);
       setLoading(false);
     });
 
@@ -44,8 +65,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signInWithGoogle = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      setError(null);
+      const result = await signInWithPopup(auth, googleProvider);
+
+      // Check if email domain is allowed
+      if (!isEmailAllowed(result.user.email || '')) {
+        // Sign out the user immediately
+        await firebaseSignOut(auth);
+        setUser(null);
+        setError('Only @getaddie.com email addresses are allowed');
+        throw new Error('Unauthorized email domain');
+      }
+
+      setUser(result.user);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error signing in with Google';
+      setError(errorMessage);
       console.error('Error signing in with Google:', error);
       throw error;
     }
@@ -53,7 +88,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = async () => {
     try {
+      setError(null);
       await firebaseSignOut(auth);
+      setUser(null);
     } catch (error) {
       console.error('Error signing out:', error);
       throw error;
@@ -63,6 +100,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const value = {
     user,
     loading,
+    error,
     signInWithGoogle,
     signOut,
   };

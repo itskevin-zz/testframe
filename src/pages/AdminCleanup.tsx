@@ -59,9 +59,9 @@ const AdminCleanup = () => {
             Admin: Database Cleanup
           </h1>
 
-          <div className={`mb-4 p-4 rounded ${colors.warning.bgLight} border ${colors.warning.border}`}>
-            <p className="text-sm font-medium">Warning:</p>
-            <p className="text-sm">
+          <div className="mb-4 p-4 rounded bg-amber-50 border border-amber-200">
+            <p className="text-sm font-medium text-amber-800">Warning:</p>
+            <p className="text-sm text-amber-700">
               This tool will remove duplicate test case executions from your database.
               Only one execution per test case will be kept (the one with the lowest order number).
             </p>

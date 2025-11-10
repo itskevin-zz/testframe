@@ -183,7 +183,7 @@ export const testCaseExecutionsService = {
         failed: uniqueExecutions.filter(e => e.status === 'Fail').length,
         blocked: uniqueExecutions.filter(e => e.status === 'Blocked').length,
         skipped: uniqueExecutions.filter(e => e.status === 'Skip').length,
-        notRun: 0, // Will be calculated by comparing with total test cases in the run
+        notRun: uniqueExecutions.filter(e => e.status === 'Not Run').length,
       };
     } catch (error) {
       console.error('Error calculating test run stats:', error);

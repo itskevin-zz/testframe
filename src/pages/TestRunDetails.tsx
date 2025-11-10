@@ -21,11 +21,11 @@ const TestRunDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<{
-    status: 'Pass' | 'Fail' | 'Blocked' | 'Skip';
+    status: 'Pass' | 'Fail' | 'Blocked' | 'Skip' | 'Not Run';
     actualResult: string;
     notes: string;
   }>({
-    status: 'Skip',
+    status: 'Not Run',
     actualResult: '',
     notes: '',
   });
@@ -49,7 +49,7 @@ const TestRunDetails = () => {
         });
       } else {
         setFormData({
-          status: 'Skip',
+          status: 'Not Run',
           actualResult: '',
           notes: '',
         });
@@ -368,15 +368,16 @@ const TestRunDetails = () => {
                           onChange={(e) =>
                             setFormData(prev => ({
                               ...prev,
-                              status: e.target.value as 'Pass' | 'Fail' | 'Blocked' | 'Skip',
+                              status: e.target.value as 'Pass' | 'Fail' | 'Blocked' | 'Skip' | 'Not Run',
                             }))
                           }
                           className={`w-full px-3 py-2 border ${colors.form.input} rounded-md shadow-sm focus:outline-none ${colors.form.inputFocus}`}
                         >
-                          <option value="Skip">Skip</option>
+                          <option value="Not Run">Not Run</option>
                           <option value="Pass">Pass</option>
                           <option value="Fail">Fail</option>
                           <option value="Blocked">Blocked</option>
+                          <option value="Skip">Skip</option>
                         </select>
                       </div>
 

@@ -1,6 +1,6 @@
 export type TestType = 'Functional' | 'Integration' | 'Performance' | 'Security' | 'Regression' | 'Smoke';
 export type Priority = 'P0' | 'P1' | 'P2' | 'P3';
-export type TestStatus = 'Pass' | 'Fail' | 'Blocked' | 'Skip';
+export type TestStatus = 'Pass' | 'Fail' | 'Blocked' | 'Skip' | 'Not Run';
 
 export interface TestCase {
   id: string; // Auto-generated unique ID (e.g., TC001, TC002)

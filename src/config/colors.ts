@@ -109,6 +109,10 @@ export const colors = {
       text: 'text-slate-600',
       badge: 'bg-slate-100 text-slate-800',
     },
+    notRun: {
+      text: 'text-slate-400',
+      badge: 'bg-slate-50 text-slate-500',
+    },
   },
 
   // Priority levels (for test cases)
@@ -194,7 +198,7 @@ export const colorHelpers = {
   /**
    * Get test result badge colors
    */
-  getTestResultBadge: (result: 'Pass' | 'Fail' | 'Blocked' | 'Skip') => {
+  getTestResultBadge: (result: 'Pass' | 'Fail' | 'Blocked' | 'Skip' | 'Not Run') => {
     switch (result) {
       case 'Pass':
         return colors.testResults.pass.badge;
@@ -204,8 +208,10 @@ export const colorHelpers = {
         return colors.testResults.blocked.badge;
       case 'Skip':
         return colors.testResults.skip.badge;
+      case 'Not Run':
+        return colors.testResults.notRun.badge;
       default:
-        return colors.testResults.skip.badge;
+        return colors.testResults.notRun.badge;
     }
   },
 
@@ -239,7 +245,7 @@ export const colorHelpers = {
   /**
    * Get test result text color
    */
-  getTestResultColor: (result: 'Pass' | 'Fail' | 'Blocked' | 'Skip') => {
+  getTestResultColor: (result: 'Pass' | 'Fail' | 'Blocked' | 'Skip' | 'Not Run') => {
     switch (result) {
       case 'Pass':
         return colors.testResults.pass.text;
@@ -249,8 +255,10 @@ export const colorHelpers = {
         return colors.testResults.blocked.text;
       case 'Skip':
         return colors.testResults.skip.text;
+      case 'Not Run':
+        return colors.testResults.notRun.text;
       default:
-        return colors.testResults.skip.text;
+        return colors.testResults.notRun.text;
     }
   },
 

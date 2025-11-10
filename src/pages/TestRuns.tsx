@@ -12,7 +12,7 @@ const TestRuns = () => {
   const [testRuns, setTestRuns] = useState<TestRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState<Map<string, { total: number; passed: number; failed: number; blocked: number; skipped: number }>>(new Map());
+  const [stats, setStats] = useState<Map<string, { total: number; passed: number; failed: number; blocked: number; skipped: number; notRun: number }>>(new Map());
 
   useEffect(() => {
     loadTestRuns();
@@ -217,6 +217,7 @@ const TestRuns = () => {
                                   <span className={colors.testResults.fail.text}>Fail: {runStats.failed}</span>
                                   <span className={colors.testResults.blocked.text}>Blocked: {runStats.blocked}</span>
                                   <span className={colors.testResults.skip.text}>Skip: {runStats.skipped}</span>
+                                  <span className={colors.testResults.notRun.text}>Not Run: {runStats.notRun}</span>
                                 </div>
                               </div>
                             )}

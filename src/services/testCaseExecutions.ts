@@ -36,11 +36,15 @@ export const testCaseExecutionsService = {
           testedBy: data.testedBy,
           executionDate: data.executionDate?.toDate() || new Date(),
           notes: data.notes,
+          order: data.order ?? 0,
         };
       });
 
-      // Sort by executionDate in memory instead of in query
-      results.sort((a, b) => b.executionDate.getTime() - a.executionDate.getTime());
+      // Sort by order first, then by executionDate
+      results.sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        return b.executionDate.getTime() - a.executionDate.getTime();
+      });
 
       return results;
     } catch (error) {
@@ -69,11 +73,15 @@ export const testCaseExecutionsService = {
           testedBy: data.testedBy,
           executionDate: data.executionDate?.toDate() || new Date(),
           notes: data.notes,
+          order: data.order ?? 0,
         };
       });
 
-      // Sort by executionDate in memory instead of in query
-      results.sort((a, b) => b.executionDate.getTime() - a.executionDate.getTime());
+      // Sort by order first, then by executionDate
+      results.sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        return b.executionDate.getTime() - a.executionDate.getTime();
+      });
 
       return results;
     } catch (error) {
@@ -102,6 +110,7 @@ export const testCaseExecutionsService = {
         testedBy: data.testedBy,
         executionDate: data.executionDate?.toDate() || new Date(),
         notes: data.notes,
+        order: data.order ?? 0,
       };
     } catch (error) {
       console.error('Error fetching test case execution:', error);
@@ -120,6 +129,7 @@ export const testCaseExecutionsService = {
         testedBy: execution.testedBy,
         executionDate: Timestamp.now(),
         notes: execution.notes || '',
+        order: execution.order ?? 0,
       });
       return docRef.id;
     } catch (error) {
@@ -161,12 +171,18 @@ export const testCaseExecutionsService = {
     try {
       const executions = await this.getByTestRunId(testRunId);
 
+      // Deduplicate by testCaseId to get accurate count
+      const uniqueTestCaseIds = new Set(executions.map(e => e.testCaseId));
+      const uniqueExecutions = Array.from(uniqueTestCaseIds).map(testCaseId =>
+        executions.find(e => e.testCaseId === testCaseId)!
+      );
+
       return {
-        total: executions.length,
-        passed: executions.filter(e => e.status === 'Pass').length,
-        failed: executions.filter(e => e.status === 'Fail').length,
-        blocked: executions.filter(e => e.status === 'Blocked').length,
-        skipped: executions.filter(e => e.status === 'Skip').length,
+        total: uniqueExecutions.length,
+        passed: uniqueExecutions.filter(e => e.status === 'Pass').length,
+        failed: uniqueExecutions.filter(e => e.status === 'Fail').length,
+        blocked: uniqueExecutions.filter(e => e.status === 'Blocked').length,
+        skipped: uniqueExecutions.filter(e => e.status === 'Skip').length,
         notRun: 0, // Will be calculated by comparing with total test cases in the run
       };
     } catch (error) {

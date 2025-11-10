@@ -7,6 +7,7 @@ import { testCasesService } from '../services/testCases';
 import { testRunTemplatesService } from '../services/testRunTemplates';
 import { testCaseExecutionsService } from '../services/testCaseExecutions';
 import { colors, colorHelpers } from '../config/colors';
+import TestCaseOrderPanel from '../components/TestCaseOrderPanel';
 
 const TestRunForm = () => {
   const { user, signOut } = useAuth();
@@ -22,7 +23,8 @@ const TestRunForm = () => {
   const [templates, setTemplates] = useState<TestRunTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [allTestCases, setAllTestCases] = useState<TestCase[]>([]);
-  const [selectedTestCases, setSelectedTestCases] = useState<Set<string>>(new Set());
+  const [selectedTestCases, setSelectedTestCases] = useState<TestCase[]>([]);
+  const [selectedTestCasesSet, setSelectedTestCasesSet] = useState<Set<string>>(new Set());
   const [filterComponent, setFilterComponent] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [loading, setLoading] = useState(true);
@@ -57,10 +59,23 @@ const TestRunForm = () => {
             status: testRun.status,
           });
 
-          // Load associated test cases
+          // Load associated test cases in order
           const executions = await testCaseExecutionsService.getByTestRunId(id);
-          const testCaseIds = new Set(executions.map(e => e.testCaseId));
-          setSelectedTestCases(testCaseIds);
+          const sortedExecutions = executions.sort((a, b) => a.order - b.order);
+
+          // Remove duplicates by using a Set to track seen IDs
+          const seenIds = new Set<string>();
+          const orderedTestCases = sortedExecutions
+            .map(exec => testCasesList.find(tc => tc.id === exec.testCaseId))
+            .filter((tc): tc is TestCase => {
+              if (!tc || seenIds.has(tc.id)) return false;
+              seenIds.add(tc.id);
+              return true;
+            });
+
+          // Update both state and set, ensuring they're in sync
+          setSelectedTestCases(orderedTestCases);
+          setSelectedTestCasesSet(new Set(orderedTestCases.map(tc => tc.id)));
         } else {
           setError('Test run not found');
         }
@@ -78,29 +93,71 @@ const TestRunForm = () => {
     if (templateId) {
       const template = templates.find(t => t.id === templateId);
       if (template) {
-        setSelectedTestCases(new Set(template.testCaseIds));
+        const templateTestCases = template.testCaseIds
+          .map(id => allTestCases.find(tc => tc.id === id))
+          .filter((tc): tc is TestCase => !!tc);
+        setSelectedTestCases(templateTestCases);
+        setSelectedTestCasesSet(new Set(template.testCaseIds));
       }
     }
   };
 
   const handleTestCaseToggle = (testCaseId: string) => {
-    setSelectedTestCases(prev => {
+    setSelectedTestCasesSet(prev => {
       const newSet = new Set(prev);
       if (newSet.has(testCaseId)) {
         newSet.delete(testCaseId);
+        // Remove from ordered array
+        setSelectedTestCases(current => current.filter(tc => tc.id !== testCaseId));
       } else {
         newSet.add(testCaseId);
+        // Add to ordered array only if not already present
+        setSelectedTestCases(current => {
+          // Check if already exists to prevent duplicates
+          if (current.some(tc => tc.id === testCaseId)) {
+            return current;
+          }
+          const testCase = allTestCases.find(tc => tc.id === testCaseId);
+          return testCase ? [...current, testCase] : current;
+        });
       }
       return newSet;
     });
   };
 
   const handleSelectAll = () => {
-    setSelectedTestCases(new Set(allTestCases.map(tc => tc.id)));
+    // Get currently selected IDs
+    const currentIds = new Set(selectedTestCases.map(tc => tc.id));
+
+    // Add only filtered test cases that aren't already selected
+    const newTestCases = filteredTestCases.filter(tc => !currentIds.has(tc.id));
+
+    // Merge existing with new (preserving order of existing)
+    const merged = [...selectedTestCases, ...newTestCases];
+
+    setSelectedTestCases(merged);
+    setSelectedTestCasesSet(new Set(merged.map(tc => tc.id)));
   };
 
   const handleDeselectAll = () => {
-    setSelectedTestCases(new Set());
+    setSelectedTestCases([]);
+    setSelectedTestCasesSet(new Set());
+  };
+
+  const handleReorder = (orderedIds: string[]) => {
+    const reorderedTestCases = orderedIds
+      .map(id => allTestCases.find(tc => tc.id === id))
+      .filter((tc): tc is TestCase => !!tc);
+    setSelectedTestCases(reorderedTestCases);
+  };
+
+  const handleRemoveTestCase = (testCaseId: string) => {
+    setSelectedTestCases(prev => prev.filter(tc => tc.id !== testCaseId));
+    setSelectedTestCasesSet(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(testCaseId);
+      return newSet;
+    });
   };
 
   const handleChange = (field: keyof typeof formData, value: string) => {
@@ -120,7 +177,7 @@ const TestRunForm = () => {
 
     if (!user) return;
 
-    if (selectedTestCases.size === 0) {
+    if (selectedTestCases.length === 0) {
       setError('Please select at least one test case');
       return;
     }
@@ -129,32 +186,50 @@ const TestRunForm = () => {
       setSaving(true);
       setError(null);
 
+      // Deduplicate selected test cases before processing
+      const seenIds = new Set<string>();
+      const uniqueSelectedTestCases = selectedTestCases.filter(tc => {
+        if (seenIds.has(tc.id)) return false;
+        seenIds.add(tc.id);
+        return true;
+      });
+
       if (isEdit && id) {
         // Update existing test run
         await testRunsService.update(id, formData);
 
-        // Update test case executions: remove deleted ones, add new ones
+        // Update test case executions: remove deleted ones, update order, add new ones
         const existingExecutions = await testCaseExecutionsService.getByTestRunId(id);
         const existingTestCaseIds = new Set(existingExecutions.map(e => e.testCaseId));
+        const selectedTestCaseIds = new Set(uniqueSelectedTestCases.map(tc => tc.id));
 
         // Delete removed test cases
         for (const execution of existingExecutions) {
-          if (!selectedTestCases.has(execution.testCaseId)) {
+          if (!selectedTestCaseIds.has(execution.testCaseId)) {
             await testCaseExecutionsService.delete(execution.id);
           }
         }
 
+        // Update order for existing test cases
+        for (let i = 0; i < uniqueSelectedTestCases.length; i++) {
+          const execution = existingExecutions.find(e => e.testCaseId === uniqueSelectedTestCases[i].id);
+          if (execution) {
+            await testCaseExecutionsService.update(execution.id, { order: i });
+          }
+        }
+
         // Add new test cases
-        for (const testCaseId of selectedTestCases) {
-          if (!existingTestCaseIds.has(testCaseId)) {
+        for (let i = 0; i < uniqueSelectedTestCases.length; i++) {
+          if (!existingTestCaseIds.has(uniqueSelectedTestCases[i].id)) {
             await testCaseExecutionsService.create({
               testRunId: id,
-              testCaseId,
+              testCaseId: uniqueSelectedTestCases[i].id,
               actualResult: '',
               status: 'Skip',
               testedBy: '',
               executionDate: new Date(),
               notes: '',
+              order: i,
             });
           }
         }
@@ -170,16 +245,17 @@ const TestRunForm = () => {
         };
         await testRunsService.create(testRun);
 
-        // Create test case executions for all selected test cases
-        for (const testCaseId of selectedTestCases) {
+        // Create test case executions for all selected test cases with order
+        for (let i = 0; i < uniqueSelectedTestCases.length; i++) {
           await testCaseExecutionsService.create({
             testRunId: testRun.id,
-            testCaseId,
+            testCaseId: uniqueSelectedTestCases[i].id,
             actualResult: '',
             status: 'Skip' as const,
             testedBy: '',
             executionDate: new Date(),
             notes: '',
+            order: i,
           });
         }
       }
@@ -403,7 +479,7 @@ const TestRunForm = () => {
                 </div>
 
                 <div className="text-sm text-slate-600 mb-3">
-                  Selected: {selectedTestCases.size} test case{selectedTestCases.size !== 1 ? 's' : ''} | Showing: {filteredTestCases.length} of {allTestCases.length}
+                  Selected: {selectedTestCasesSet.size} test case{selectedTestCasesSet.size !== 1 ? 's' : ''} | Showing: {filteredTestCases.length} of {allTestCases.length}
                 </div>
 
                 {allTestCases.length === 0 ? (
@@ -436,12 +512,12 @@ const TestRunForm = () => {
                         {filteredTestCases.map(testCase => (
                           <tr
                             key={testCase.id}
-                            className={selectedTestCases.has(testCase.id) ? colors.background.selected : colors.background.hover}
+                            className={selectedTestCasesSet.has(testCase.id) ? colors.background.selected : colors.background.hover}
                           >
                             <td className="px-4 py-3 whitespace-nowrap">
                               <input
                                 type="checkbox"
-                                checked={selectedTestCases.has(testCase.id)}
+                                checked={selectedTestCasesSet.has(testCase.id)}
                                 onChange={() => handleTestCaseToggle(testCase.id)}
                                 className="h-4 w-4 text-stone-600 focus:ring-stone-500 border-slate-300 rounded"
                               />
@@ -467,6 +543,12 @@ const TestRunForm = () => {
                   </div>
                 )}
               </div>
+
+              <TestCaseOrderPanel
+                testCases={selectedTestCases}
+                onReorder={handleReorder}
+                onRemove={handleRemoveTestCase}
+              />
 
               <div className="flex justify-end space-x-3">
                 <button

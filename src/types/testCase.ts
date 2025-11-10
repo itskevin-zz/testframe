@@ -37,6 +37,7 @@ export interface TestCaseExecution {
   testedBy: string; // User email from Google auth
   executionDate: Date;
   notes?: string; // Optional additional notes
+  order: number; // Order within the test run (0-indexed)
 }
 
 // A template for creating test runs with pre-selected test cases

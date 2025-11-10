@@ -9,6 +9,7 @@ import TestRuns from './pages/TestRuns';
 import TestRunForm from './pages/TestRunForm';
 import TestRunDetails from './pages/TestRunDetails';
 import Settings from './pages/Settings';
+import AdminCleanup from './pages/AdminCleanup';
 
 function App() {
   return (
@@ -85,6 +86,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/cleanup"
+            element={
+              <ProtectedRoute>
+                <AdminCleanup />
               </ProtectedRoute>
             }
           />

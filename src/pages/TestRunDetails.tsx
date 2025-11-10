@@ -84,7 +84,7 @@ const TestRunDetails = () => {
           ...tc,
           execution: executionMap.get(tc.id),
         }))
-        .sort((a, b) => a.id.localeCompare(b.id));
+        .sort((a, b) => (a.execution?.order ?? 0) - (b.execution?.order ?? 0));
 
       setTestCases(testCasesWithExecution);
       if (testCasesWithExecution.length > 0) {

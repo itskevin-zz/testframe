@@ -23,6 +23,8 @@ const TestRunForm = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [allTestCases, setAllTestCases] = useState<TestCase[]>([]);
   const [selectedTestCases, setSelectedTestCases] = useState<Set<string>>(new Set());
+  const [filterComponent, setFilterComponent] = useState<string>('all');
+  const [filterPriority, setFilterPriority] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,6 +106,14 @@ const TestRunForm = () => {
   const handleChange = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const filteredTestCases = allTestCases.filter(tc => {
+    if (filterComponent !== 'all' && tc.component !== filterComponent) return false;
+    if (filterPriority !== 'all' && tc.priority !== filterPriority) return false;
+    return true;
+  });
+
+  const uniqueComponents = Array.from(new Set(allTestCases.map(tc => tc.component)));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -355,8 +365,45 @@ const TestRunForm = () => {
                   </div>
                 )}
 
+                <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="filter-component" className="block text-sm font-medium text-slate-700">
+                      Filter by Component
+                    </label>
+                    <select
+                      id="filter-component"
+                      value={filterComponent}
+                      onChange={(e) => setFilterComponent(e.target.value)}
+                      className={`mt-1 block w-full pl-3 pr-10 py-2 text-base ${colors.form.input} border focus:outline-none ${colors.form.inputFocus} sm:text-sm rounded-md`}
+                    >
+                      <option value="all">All Components</option>
+                      {uniqueComponents.map(comp => (
+                        <option key={comp} value={comp}>{comp}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="filter-priority" className="block text-sm font-medium text-slate-700">
+                      Filter by Priority
+                    </label>
+                    <select
+                      id="filter-priority"
+                      value={filterPriority}
+                      onChange={(e) => setFilterPriority(e.target.value)}
+                      className={`mt-1 block w-full pl-3 pr-10 py-2 text-base ${colors.form.input} border focus:outline-none ${colors.form.inputFocus} sm:text-sm rounded-md`}
+                    >
+                      <option value="all">All Priorities</option>
+                      <option value="P0">P0 - Critical</option>
+                      <option value="P1">P1 - High</option>
+                      <option value="P2">P2 - Medium</option>
+                      <option value="P3">P3 - Low</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div className="text-sm text-slate-600 mb-3">
-                  Selected: {selectedTestCases.size} test case{selectedTestCases.size !== 1 ? 's' : ''}
+                  Selected: {selectedTestCases.size} test case{selectedTestCases.size !== 1 ? 's' : ''} | Showing: {filteredTestCases.length} of {allTestCases.length}
                 </div>
 
                 {allTestCases.length === 0 ? (
@@ -386,7 +433,7 @@ const TestRunForm = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-slate-200">
-                        {allTestCases.map(testCase => (
+                        {filteredTestCases.map(testCase => (
                           <tr
                             key={testCase.id}
                             className={selectedTestCases.has(testCase.id) ? colors.background.selected : colors.background.hover}

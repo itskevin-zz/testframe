@@ -130,4 +130,35 @@ export const testRunsService = {
       throw error;
     }
   },
+
+  // Duplicate a test run (Note: test case executions are duplicated separately by the caller)
+  async duplicate(id: string, createdBy: string): Promise<string> {
+    try {
+      // Get the original test run
+      const original = await this.getById(id);
+      if (!original) {
+        throw new Error('Test run not found');
+      }
+
+      // Generate a new ID
+      const newId = await this.generateTestRunId();
+
+      // Create the new test run with modified name
+      const newTestRun: TestRun = {
+        id: newId,
+        name: `${original.name} (Copy)`,
+        description: original.description,
+        createdBy,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        status: 'Not Started',
+      };
+
+      await this.create(newTestRun);
+      return newId;
+    } catch (error) {
+      console.error('Error duplicating test run:', error);
+      throw error;
+    }
+  },
 };

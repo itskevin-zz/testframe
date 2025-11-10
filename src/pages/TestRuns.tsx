@@ -54,6 +54,44 @@ const TestRuns = () => {
     }
   };
 
+  const handleDuplicate = async (id: string) => {
+    if (!user?.email) {
+      setError('User not authenticated');
+      return;
+    }
+
+    try {
+      // Duplicate the test run
+      const newTestRunId = await testRunsService.duplicate(id, user.email);
+
+      // Get the original test case executions
+      const originalExecutions = await testCaseExecutionsService.getByTestRunId(id);
+
+      // Create new executions for the duplicated test run with "Not Run" status
+      for (const execution of originalExecutions) {
+        await testCaseExecutionsService.create({
+          testRunId: newTestRunId,
+          testCaseId: execution.testCaseId,
+          actualResult: '',
+          status: 'Not Run',
+          testedBy: '',
+          executionDate: new Date(),
+          notes: '',
+          order: execution.order,
+        });
+      }
+
+      // Reload the test runs to show the new one
+      await loadTestRuns();
+
+      // Navigate to the new test run
+      navigate(`/test-runs/${newTestRunId}`);
+    } catch (err) {
+      console.error('Error duplicating test run:', err);
+      setError('Failed to duplicate test run. Please try again.');
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/login');
@@ -228,6 +266,12 @@ const TestRuns = () => {
                               className={`px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${colors.success.bg} hover:${colors.success.bgHover} focus:outline-none focus:ring-2 focus:ring-offset-2 ${colors.success.ring}`}
                             >
                               Execute Tests
+                            </button>
+                            <button
+                              onClick={() => handleDuplicate(run.id)}
+                              className={`px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${colors.primary.bg} hover:${colors.primary.bgHover} focus:outline-none focus:ring-2 focus:ring-offset-2 ${colors.primary.ring}`}
+                            >
+                              Duplicate
                             </button>
                             <button
                               onClick={() => navigate(`/test-runs/${run.id}/edit`)}

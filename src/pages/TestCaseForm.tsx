@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { TestCase, TestType, Priority, Component } from '../types/testCase';
 import { componentsService } from '../services/components';
 import { testCasesService } from '../services/testCases';
+import MarkdownEditor from '../components/MarkdownEditor';
 
 const TestCaseForm = () => {
   const { user, signOut } = useAuth();
@@ -261,57 +262,39 @@ const TestCaseForm = () => {
               </div>
 
               <div>
-                <label htmlFor="preconditions" className="block text-sm font-medium text-slate-700">
+                <label htmlFor="preconditions" className="block text-sm font-medium text-slate-700 mb-1">
                   Preconditions * <span className="text-slate-400 font-normal">(Markdown supported)</span>
                 </label>
-                <textarea
+                <MarkdownEditor
                   id="preconditions"
-                  required
-                  rows={4}
                   value={formData.preconditions}
-                  onChange={(e) => handleChange('preconditions', e.target.value)}
-                  className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-stone-500 focus:border-stone-500 sm:text-sm font-mono"
+                  onChange={(value) => handleChange('preconditions', value)}
                   placeholder="- Student email does not exist&#10;- Valid email link received&#10;- Use **bold** or *italic* for emphasis"
                 />
-                <p className="mt-1 text-xs text-slate-500">
-                  Supports Markdown: **bold**, *italic*, lists, links, etc.
-                </p>
               </div>
 
               <div>
-                <label htmlFor="testSteps" className="block text-sm font-medium text-slate-700">
+                <label htmlFor="testSteps" className="block text-sm font-medium text-slate-700 mb-1">
                   Test Steps * <span className="text-slate-400 font-normal">(Markdown supported)</span>
                 </label>
-                <textarea
+                <MarkdownEditor
                   id="testSteps"
-                  required
-                  rows={8}
                   value={formData.testSteps}
-                  onChange={(e) => handleChange('testSteps', e.target.value)}
-                  className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-stone-500 focus:border-stone-500 sm:text-sm font-mono"
+                  onChange={(value) => handleChange('testSteps', value)}
                   placeholder="1. Click on **email invitation link**&#10;2. Enter valid phone number (e.g., `+1-416-555-0123`)&#10;3. Enter name&#10;..."
                 />
-                <p className="mt-1 text-xs text-slate-500">
-                  Use numbered lists, **bold** for UI elements, `code` for values
-                </p>
               </div>
 
               <div>
-                <label htmlFor="expectedResult" className="block text-sm font-medium text-slate-700">
+                <label htmlFor="expectedResult" className="block text-sm font-medium text-slate-700 mb-1">
                   Expected Result * <span className="text-slate-400 font-normal">(Markdown supported)</span>
                 </label>
-                <textarea
+                <MarkdownEditor
                   id="expectedResult"
-                  required
-                  rows={6}
                   value={formData.expectedResult}
-                  onChange={(e) => handleChange('expectedResult', e.target.value)}
-                  className="mt-1 block w-full border border-slate-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-stone-500 focus:border-stone-500 sm:text-sm font-mono"
+                  onChange={(value) => handleChange('expectedResult', value)}
                   placeholder="- Phone validation **passes**&#10;- SMS sent within `30 seconds`&#10;- User record created with:&#10;  - email, phone, name populated&#10;  - status = `active`"
                 />
-                <p className="mt-1 text-xs text-slate-500">
-                  Use lists, **bold** for important items, `code` for values
-                </p>
               </div>
             </div>
 

@@ -7,6 +7,7 @@ import type { TestRun, TestCase, TestCaseExecution, TestStatus } from '../types/
 import { testRunsService } from '../services/testRuns';
 import { testCasesService } from '../services/testCases';
 import { testCaseExecutionsService } from '../services/testCaseExecutions';
+import MarkdownEditor from '../components/MarkdownEditor';
 
 const TestRunExecution = () => {
   const { user, signOut } = useAuth();
@@ -372,33 +373,25 @@ const TestRunExecution = () => {
                     </div>
 
                     <div>
-                      <label htmlFor="actualResult" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="actualResult" className="block text-sm font-medium text-gray-700 mb-1">
                         Actual Result * <span className="text-gray-400 font-normal">(Markdown supported)</span>
                       </label>
-                      <textarea
+                      <MarkdownEditor
                         id="actualResult"
-                        required
-                        rows={8}
                         value={formData.actualResult}
-                        onChange={(e) => handleChange('actualResult', e.target.value)}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                        onChange={(value) => handleChange('actualResult', value)}
                         placeholder="- Validation **passed** ✓&#10;- SMS received in `25 seconds`&#10;- User created with status: `active`"
                       />
-                      <p className="mt-1 text-xs text-gray-500">
-                        Use **bold** for status, `code` for values, ✓/❌ for pass/fail
-                      </p>
                     </div>
 
                     <div>
-                      <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
                         Notes (Optional) <span className="text-gray-400 font-normal">(Markdown supported)</span>
                       </label>
-                      <textarea
+                      <MarkdownEditor
                         id="notes"
-                        rows={4}
                         value={formData.notes}
-                        onChange={(e) => handleChange('notes', e.target.value)}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                        onChange={(value) => handleChange('notes', value)}
                         placeholder="Additional observations, links to issues, etc."
                       />
                     </div>

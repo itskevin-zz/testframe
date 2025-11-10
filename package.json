@@ -10,12 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.1.0",
     "@tailwindcss/typography": "^0.5.19",
+    "easymde": "^2.20.0",
     "firebase": "^12.5.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.5",
+    "react-simplemde-editor": "^5.2.0",
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {

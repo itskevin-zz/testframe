@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import type { TestRun } from '../types/testCase';
 import { testRunsService } from '../services/testRuns';
-import { testCaseExecutionsService } from '../services/testCaseExecutions';
+import { testCaseExecutionsService, TestRunLockedError } from '../services/testCaseExecutions';
 import { colors, colorHelpers } from '../config/colors';
 
 const TestRuns = () => {
@@ -20,6 +20,7 @@ const TestRuns = () => {
   const [newTestRunName, setNewTestRunName] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
   const [isDuplicating, setIsDuplicating] = useState(false);
+  const isDuplicatingRef = useRef(false);
 
   useEffect(() => {
     loadTestRuns();
@@ -94,8 +95,9 @@ const TestRuns = () => {
   };
 
   const confirmDuplicate = async () => {
-    if (!user?.email || !duplicateSourceId) {
-      setError('User not authenticated or no test run selected');
+    // Prevent double submission
+    if (!user?.email || !duplicateSourceId || isDuplicatingRef.current) {
+      console.log('[TestRuns] Duplication blocked - user:', !!user?.email, 'sourceId:', !!duplicateSourceId, 'isDuplicating:', isDuplicatingRef.current);
       return;
     }
 
@@ -105,15 +107,36 @@ const TestRuns = () => {
       return;
     }
 
+    let lockedRunId: string | null = null;
+    let lockId: string | null = null;
+
     try {
+      isDuplicatingRef.current = true;
       setIsDuplicating(true);
       setError(null);
 
+      // Additional guard check inside try block
+      if (isDuplicatingRef.current !== true) {
+        console.log('[TestRuns] Guard state inconsistent, aborting');
+        return;
+      }
+
+      console.log('[TestRuns] Starting duplication from', duplicateSourceId);
+
       // Duplicate the test run with custom name
       const newTestRunId = await testRunsService.duplicate(duplicateSourceId, user.email, newTestRunName);
+      lockedRunId = newTestRunId;
+      lockId = await testCaseExecutionsService.acquireTestRunLock(newTestRunId, {
+        lockedBy: user.email,
+        reason: 'duplicate-test-run',
+      });
+
+      console.log('[TestRuns] New test run created:', newTestRunId);
 
       // Get the original test case executions
       const originalExecutions = await testCaseExecutionsService.getByTestRunId(duplicateSourceId);
+
+      console.log('[TestRuns] Found', originalExecutions.length, 'original executions');
 
       // Deduplicate executions by testCaseId (in case there are duplicates in the database)
       const seenTestCaseIds = new Set<string>();
@@ -125,19 +148,25 @@ const TestRuns = () => {
         return true;
       });
 
-      // Create new executions for the duplicated test run with "Not Run" status
-      for (const execution of uniqueExecutions) {
-        await testCaseExecutionsService.create({
-          testRunId: newTestRunId,
-          testCaseId: execution.testCaseId,
-          actualResult: '',
-          status: 'Not Run',
-          testedBy: '',
-          executionDate: new Date(),
-          notes: '',
-          order: execution.order,
-        });
-      }
+      console.log('[TestRuns] After deduplication:', uniqueExecutions.length, 'unique executions to create');
+
+      // Create new executions in parallel - eliminates race conditions
+      await Promise.all(
+        uniqueExecutions.map(execution =>
+          testCaseExecutionsService.create({
+            testRunId: newTestRunId,
+            testCaseId: execution.testCaseId,
+            actualResult: '',
+            status: 'Not Run',
+            testedBy: '',
+            executionDate: new Date(),
+            notes: '',
+            order: execution.order,
+          })
+        )
+      );
+
+      console.log('[TestRuns] All executions created successfully');
 
       // Close modal and reset state
       setShowDuplicateModal(false);
@@ -148,13 +177,32 @@ const TestRuns = () => {
       // Reload the test runs to show the new one
       await loadTestRuns();
 
+      console.log('[TestRuns] Navigating to new test run');
+
       // Navigate to the new test run
       navigate(`/test-runs/${newTestRunId}`);
     } catch (err) {
-      console.error('Error duplicating test run:', err);
-      setError('Failed to duplicate test run. Please try again.');
+      if (err instanceof TestRunLockedError) {
+        console.warn('[TestRuns] Lock error during duplication:', err.message);
+        setError('Another tab is already modifying that test run. Please wait a few seconds and try again.');
+      } else {
+        console.error('[TestRuns] Error duplicating test run:', err);
+        setError('Failed to duplicate test run. Please try again.');
+      }
     } finally {
+      if (lockedRunId && lockId) {
+        try {
+          await testCaseExecutionsService.releaseTestRunLock(lockedRunId, lockId);
+        } catch (lockErr) {
+          console.warn('[TestRuns] Failed to release duplication lock for', lockedRunId, lockErr);
+        }
+      }
       setIsDuplicating(false);
+      // Only reset guard after everything completes (including navigation)
+      setTimeout(() => {
+        isDuplicatingRef.current = false;
+        console.log('[TestRuns] Duplication guard reset');
+      }, 100);
     }
   };
 

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { TestRun, TestCase, TestRunTemplate } from '../types/testCase';
 import { testRunsService } from '../services/testRuns';
 import { testCasesService } from '../services/testCases';
 import { testRunTemplatesService } from '../services/testRunTemplates';
-import { testCaseExecutionsService } from '../services/testCaseExecutions';
+import { testCaseExecutionsService, TestRunLockedError } from '../services/testCaseExecutions';
 import { colors, colorHelpers } from '../config/colors';
 import TestCaseOrderPanel from '../components/TestCaseOrderPanel';
 
@@ -30,6 +30,7 @@ const TestRunForm = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     loadData();
@@ -103,26 +104,32 @@ const TestRunForm = () => {
   };
 
   const handleTestCaseToggle = (testCaseId: string) => {
-    setSelectedTestCasesSet(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(testCaseId)) {
+    const isCurrentlySelected = selectedTestCasesSet.has(testCaseId);
+
+    if (isCurrentlySelected) {
+      // Remove from both Set and array
+      setSelectedTestCasesSet(prev => {
+        const newSet = new Set(prev);
         newSet.delete(testCaseId);
-        // Remove from ordered array
-        setSelectedTestCases(current => current.filter(tc => tc.id !== testCaseId));
-      } else {
+        return newSet;
+      });
+      setSelectedTestCases(current => current.filter(tc => tc.id !== testCaseId));
+    } else {
+      // Add to both Set and array
+      setSelectedTestCasesSet(prev => {
+        const newSet = new Set(prev);
         newSet.add(testCaseId);
-        // Add to ordered array only if not already present
-        setSelectedTestCases(current => {
-          // Check if already exists to prevent duplicates
-          if (current.some(tc => tc.id === testCaseId)) {
-            return current;
-          }
-          const testCase = allTestCases.find(tc => tc.id === testCaseId);
-          return testCase ? [...current, testCase] : current;
-        });
-      }
-      return newSet;
-    });
+        return newSet;
+      });
+      setSelectedTestCases(current => {
+        // Check if already exists to prevent duplicates
+        if (current.some(tc => tc.id === testCaseId)) {
+          return current;
+        }
+        const testCase = allTestCases.find(tc => tc.id === testCaseId);
+        return testCase ? [...current, testCase] : current;
+      });
+    }
   };
 
   const handleSelectAll = () => {
@@ -175,16 +182,32 @@ const TestRunForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user) return;
+    // Prevent double submission
+    if (!user || isSubmittingRef.current) {
+      console.log('[TestRunForm] Submission blocked - user:', !!user, 'isSubmitting:', isSubmittingRef.current);
+      return;
+    }
 
     if (selectedTestCases.length === 0) {
       setError('Please select at least one test case');
       return;
     }
 
+    let lockedRunId: string | null = null;
+    let lockId: string | null = null;
+
     try {
+      isSubmittingRef.current = true;
       setSaving(true);
       setError(null);
+
+      // Additional guard check inside try block
+      if (isSubmittingRef.current !== true) {
+        console.log('[TestRunForm] Guard state inconsistent, aborting');
+        return;
+      }
+
+      console.log('[TestRunForm] Starting submission with', selectedTestCases.length, 'selected test cases');
 
       // Deduplicate selected test cases before processing
       const seenIds = new Set<string>();
@@ -194,7 +217,15 @@ const TestRunForm = () => {
         return true;
       });
 
+      console.log('[TestRunForm] After deduplication:', uniqueSelectedTestCases.length, 'unique test cases');
+
       if (isEdit && id) {
+        lockedRunId = id;
+        lockId = await testCaseExecutionsService.acquireTestRunLock(id, {
+          lockedBy: user.email || 'unknown',
+          reason: 'edit-test-run',
+        });
+
         // Update existing test run
         await testRunsService.update(id, formData);
 
@@ -218,24 +249,37 @@ const TestRunForm = () => {
           }
         }
 
-        // Add new test cases
-        for (let i = 0; i < uniqueSelectedTestCases.length; i++) {
-          if (!existingTestCaseIds.has(uniqueSelectedTestCases[i].id)) {
-            await testCaseExecutionsService.create({
+        // Add new test cases - batch creation to prevent race conditions
+        const newTestCases = uniqueSelectedTestCases.filter(tc =>
+          !existingTestCaseIds.has(tc.id)
+        );
+
+        console.log('[TestRunForm] Edit mode - creating', newTestCases.length, 'new executions');
+
+        // Create all new executions in parallel
+        await Promise.all(
+          newTestCases.map(tc => {
+            const order = uniqueSelectedTestCases.findIndex(utc => utc.id === tc.id);
+            return testCaseExecutionsService.create({
               testRunId: id,
-              testCaseId: uniqueSelectedTestCases[i].id,
+              testCaseId: tc.id,
               actualResult: '',
               status: 'Not Run',
               testedBy: '',
               executionDate: new Date(),
               notes: '',
-              order: i,
+              order: order,
             });
-          }
-        }
+          })
+        );
       } else {
         // Create new test run
         const testRunId = await testRunsService.generateTestRunId();
+        lockedRunId = testRunId;
+        lockId = await testCaseExecutionsService.acquireTestRunLock(testRunId, {
+          lockedBy: user.email || 'unknown',
+          reason: 'create-test-run',
+        });
         const testRun: TestRun = {
           id: testRunId,
           ...formData,
@@ -245,26 +289,52 @@ const TestRunForm = () => {
         };
         await testRunsService.create(testRun);
 
-        // Create test case executions for all selected test cases with order
-        for (let i = 0; i < uniqueSelectedTestCases.length; i++) {
-          await testCaseExecutionsService.create({
-            testRunId: testRun.id,
-            testCaseId: uniqueSelectedTestCases[i].id,
-            actualResult: '',
-            status: 'Not Run' as const,
-            testedBy: '',
-            executionDate: new Date(),
-            notes: '',
-            order: i,
-          });
-        }
+        console.log('[TestRunForm] New test run created - creating', uniqueSelectedTestCases.length, 'executions');
+
+        // Create test case executions in parallel - eliminates race conditions
+        await Promise.all(
+          uniqueSelectedTestCases.map((tc, i) =>
+            testCaseExecutionsService.create({
+              testRunId: testRun.id,
+              testCaseId: tc.id,
+              actualResult: '',
+              status: 'Not Run' as const,
+              testedBy: '',
+              executionDate: new Date(),
+              notes: '',
+              order: i,
+            })
+          )
+        );
+
+        console.log('[TestRunForm] All executions created successfully');
       }
 
+      // Navigate after all operations complete successfully
+      console.log('[TestRunForm] Navigating to test-runs page');
       navigate('/test-runs');
     } catch (err) {
-      console.error('Error saving test run:', err);
-      setError('Failed to save test run. Please try again.');
+      if (err instanceof TestRunLockedError) {
+        console.warn('[TestRunForm] Lock error encountered:', err.message);
+        setError('Another tab is currently modifying this test run. Please wait a few seconds and try again.');
+      } else {
+        console.error('[TestRunForm] Error saving test run:', err);
+        setError('Failed to save test run. Please try again.');
+      }
+    } finally {
+      if (lockedRunId && lockId) {
+        try {
+          await testCaseExecutionsService.releaseTestRunLock(lockedRunId, lockId);
+        } catch (lockErr) {
+          console.warn('[TestRunForm] Failed to release lock for', lockedRunId, lockErr);
+        }
+      }
       setSaving(false);
+      // Only reset guard after everything completes (including navigation)
+      setTimeout(() => {
+        isSubmittingRef.current = false;
+        console.log('[TestRunForm] Submission guard reset');
+      }, 100);
     }
   };
 

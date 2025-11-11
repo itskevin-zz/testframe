@@ -1,101 +1,92 @@
 [
 {
-"component": "Notifications Admin",
-"feature": "Create reminder for all students and send now",
+"component": "Notification Templates",
+"feature": "Create a new template",
 "testType": "Functional",
 "priority": "P0",
-"preconditions": "School has a default channel configured and at least one active student",
-"testSteps": "Open Notifications. Click Add Reminder. Choose All Students. Select a template. Confirm message. Click Send Now.",
-"expectedResult": "Messages are dispatched immediately using the school channel. Delivery status is shown. An entry appears in Past."
+"preconditions": "Admin has access to the Template Configuration screen",
+"testSteps": "Click Create Template. Enter template name and message content. Select tier as Active. Click Create.",
+"expectedResult": "Template is created and listed in the Template Configuration table with correct details."
 },
 {
-"component": "Notifications Admin",
-"feature": "Create reminder for specific students and schedule",
+"component": "Notification Templates",
+"feature": "Tier selection and persistence",
 "testType": "Functional",
 "priority": "P0",
-"preconditions": "At least two active students exist",
-"testSteps": "Open Notifications. Click Add Reminder. Choose Specific Students and select two students. Select a template. Set a future date and time. Click Create.",
-"expectedResult": "A row appears in Upcoming with correct student count, template, date, and time. No messages are sent yet."
+"preconditions": "Template creation modal is open",
+"testSteps": "Select each tier option: Active, At Risk, Dormant. Save template. Reopen it for preview.",
+"expectedResult": "Tier value persists accurately after save and reload."
 },
 {
-"component": "Student Delivery",
-"feature": "Deliver at scheduled time with correct timezone",
+"component": "Notification Templates",
+"feature": "Predefined template suggestions",
 "testType": "Functional",
 "priority": "P0",
-"preconditions": "Reminder is scheduled for a future time in the school timezone and targeted students have valid channel details",
-"testSteps": "Wait until the scheduled time.",
-"expectedResult": "Messages are delivered within the service window. Timestamps reflect the school timezone. The entry moves to Past."
+"preconditions": "At least one predefined template suggestion exists",
+"testSteps": "Open Create Template modal. Click Predefined Template Suggestions dropdown. Select Follow-up 2. Click Create.",
+"expectedResult": "Message content field is auto-filled with the predefined template text. Template saves successfully."
 },
 {
-"component": "Channel Routing",
-"feature": "Send using school configured channel",
+"component": "Notification Templates",
+"feature": "Variable placeholder rendering",
 "testType": "Functional",
 "priority": "P0",
-"preconditions": "School channel is set to SMS or WhatsApp or Email",
-"testSteps": "Create a reminder and send now.",
-"expectedResult": "Messages are sent only via the configured channel. The audit log shows the channel used."
+"preconditions": "Template message includes variable placeholders such as {{student_name}}",
+"testSteps": "Preview the template content after saving.",
+"expectedResult": "Variables remain properly formatted in the editor and render correctly when used in notifications."
 },
 {
-"component": "Templates",
-"feature": "Variable substitution in message templates",
+"component": "Notification Templates",
+"feature": "Preview existing template",
 "testType": "Functional",
 "priority": "P0",
-"preconditions": "Template contains variables such as student_name and cta_section",
-"testSteps": "Create a reminder using the template. Preview the message. Send the reminder.",
-"expectedResult": "Variables are resolved for each student. No raw placeholders appear in delivered messages."
+"preconditions": "At least one template exists",
+"testSteps": "Click Preview on any listed template.",
+"expectedResult": "Template preview modal opens showing tier, message body, and creation details accurately."
 },
 {
-"component": "Scheduling",
-"feature": "Block past dated scheduling",
+"component": "Notification Templates",
+"feature": "Delete template confirmation",
 "testType": "Functional",
 "priority": "P0",
-"preconditions": "None",
-"testSteps": "Attempt to schedule a reminder with a date and time in the past. Click Create.",
-"expectedResult": "A clear validation error is shown and the reminder is not created."
+"preconditions": "At least one template exists",
+"testSteps": "Click the Delete button for a template. Confirm deletion when prompted.",
+"expectedResult": "Template is removed from the list. It no longer appears in search results or dropdowns."
 },
 {
-"component": "Eligibility and Consent",
-"feature": "Respect do not contact flag",
-"testType": "Security",
+"component": "Notification Templates",
+"feature": "Validation for required fields",
+"testType": "Functional",
 "priority": "P0",
-"preconditions": "At least one selected student is marked do not contact",
-"testSteps": "Create a reminder targeting that student and others. Send now or schedule.",
-"expectedResult": "The opted out student is skipped with a visible reason. All other eligible students receive the message."
+"preconditions": "Create Template modal is open",
+"testSteps": "Attempt to click Create without entering template name or message content.",
+"expectedResult": "Validation message appears for required fields. Create button remains disabled until all fields are completed."
 },
 {
-"component": "Access Control",
-"feature": "Permissions to create and send reminders",
-"testType": "Security",
+"component": "Notification Templates",
+"feature": "List ordering and pagination",
+"testType": "Functional",
 "priority": "P0",
-"preconditions": "Teacher role with read only permissions and Admin role with full permissions exist",
-"testSteps": "Log in as Teacher and attempt to add a reminder or send now. Log in as Admin and perform the same actions.",
-"expectedResult": "Teacher is blocked with a permission error. Admin is allowed to create and send."
+"preconditions": "More than one page of templates exists",
+"testSteps": "Use pagination controls to move between pages. Sort by Updated At.",
+"expectedResult": "Templates display correctly on each page. Sorting updates the order of results as expected."
 },
 {
-"component": "Failure Handling",
-"feature": "Surface failed messages and allow single retry",
+"component": "Notification Templates",
+"feature": "Updated timestamp reflects edits",
 "testType": "Integration",
 "priority": "P0",
-"preconditions": "Provider failure is induced for one recipient",
-"testSteps": "Send a reminder. Open Failed Messages. Click Retry for the failed item.",
-"expectedResult": "Failure is visible with a reason. A successful retry moves the item to Past. If retry fails, the reason is updated."
+"preconditions": "A template exists and is editable",
+"testSteps": "Edit message content. Click Save. Return to the Template Configuration table.",
+"expectedResult": "Updated At timestamp reflects the edit time accurately."
 },
 {
-"component": "Engagement",
-"feature": "CTA or deep link opens the intended flow",
-"testType": "Functional",
+"component": "Notification Templates",
+"feature": "Visibility in dependent dropdowns",
+"testType": "Integration",
 "priority": "P0",
-"preconditions": "Template includes a deep link to an Addie workflow",
-"testSteps": "Deliver the message. As the student, open the link.",
-"expectedResult": "The student lands in the intended Addie flow. The event is tracked to the notification identifier."
-},
-{
-"component": "UI List Integrity",
-"feature": "Upcoming to Past transition",
-"testType": "Functional",
-"priority": "P0",
-"preconditions": "One reminder is scheduled and another is sent now",
-"testSteps": "Send one reminder now. Wait for the scheduled reminder to fire.",
-"expectedResult": "Both reminders appear in Past with correct timestamps and final statuses. The scheduled row is removed from Upcoming."
+"preconditions": "Template was newly created",
+"testSteps": "Navigate to Notifications → Add Reminder → Template dropdown. Search for the new template.",
+"expectedResult": "Newly created template appears in the dropdown and can be selected for reminders."
 }
 ]

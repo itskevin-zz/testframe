@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "testCaseExecutions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "testRunId", "order": "ASCENDING" },
+        { "fieldPath": "testCaseId", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

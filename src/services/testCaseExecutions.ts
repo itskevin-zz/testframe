@@ -9,13 +9,147 @@ import {
   query,
   where,
   Timestamp,
+  runTransaction,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { TestCaseExecution } from '../types/testCase';
 
 const COLLECTION_NAME = 'testCaseExecutions';
+const LOCK_COLLECTION_NAME = 'testRunLocks';
+const LOCK_TTL_MS = 2 * 60 * 1000; // 2 minutes
+
+const localLockTokens = new Map<string, string>();
+
+const getTabId = () => {
+  if (typeof window === 'undefined' || !window.sessionStorage) {
+    return 'server';
+  }
+  const existing = window.sessionStorage.getItem('tabId');
+  if (existing) {
+    return existing;
+  }
+  const newId = `tab-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  window.sessionStorage.setItem('tabId', newId);
+  return newId;
+};
+
+export class TestRunLockedError extends Error {
+  public readonly lockOwner?: string;
+
+  constructor(message: string, lockOwner?: string) {
+    super(message);
+    this.name = 'TestRunLockedError';
+    this.lockOwner = lockOwner;
+  }
+}
 
 export const testCaseExecutionsService = {
+  // Acquire a short-lived lock for a test run to prevent concurrent writes
+  async acquireTestRunLock(
+    testRunId: string,
+    options: { lockedBy?: string; reason?: string } = {}
+  ): Promise<string> {
+    const tabId = getTabId();
+    const lockId = `${tabId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const lockRef = doc(db, LOCK_COLLECTION_NAME, testRunId);
+
+    return runTransaction(db, async transaction => {
+      const existing = await transaction.get(lockRef);
+      const now = Timestamp.now();
+      const expiresAt = Timestamp.fromDate(new Date(Date.now() + LOCK_TTL_MS));
+
+      if (existing.exists()) {
+        const data = existing.data();
+        const expires = data.expiresAt?.toDate() || new Date(0);
+        if (expires.getTime() > Date.now() && data.tabId !== tabId) {
+          throw new TestRunLockedError(
+            `Test run ${testRunId} is currently being modified by another tab.`,
+            data.lockedBy || data.tabId
+          );
+        }
+      }
+
+      transaction.set(lockRef, {
+        lockId,
+        tabId,
+        lockedBy: options.lockedBy || 'unknown',
+        reason: options.reason || 'unspecified',
+        lockedAt: now,
+        expiresAt,
+      });
+
+      localLockTokens.set(testRunId, lockId);
+      console.log(
+        `[LOCK][TAB-${tabId}] Acquired lock ${lockId} for testRunId: ${testRunId} (${options.reason || 'unspecified'})`
+      );
+
+      return lockId;
+    });
+  },
+
+  // Release a previously acquired lock
+  async releaseTestRunLock(testRunId: string, lockId?: string): Promise<void> {
+    const tabId = getTabId();
+    const effectiveLockId = lockId || localLockTokens.get(testRunId);
+    if (!effectiveLockId) {
+      return;
+    }
+
+    const lockRef = doc(db, LOCK_COLLECTION_NAME, testRunId);
+
+    await runTransaction(db, async transaction => {
+      const existing = await transaction.get(lockRef);
+      if (!existing.exists()) {
+        localLockTokens.delete(testRunId);
+        return;
+      }
+
+      const data = existing.data();
+      if (data.lockId === effectiveLockId || data.tabId === tabId) {
+        transaction.delete(lockRef);
+        console.log(`[LOCK][TAB-${tabId}] Released lock ${effectiveLockId} for testRunId: ${testRunId}`);
+      }
+    });
+
+    if (localLockTokens.get(testRunId) === effectiveLockId) {
+      localLockTokens.delete(testRunId);
+    }
+  },
+
+  // Internal utility to ensure this tab owns the lock before writing
+  async _assertLockOwnership(testRunId: string): Promise<void> {
+    const tabId = getTabId();
+    const lockRef = doc(db, LOCK_COLLECTION_NAME, testRunId);
+    const lockSnap = await getDoc(lockRef);
+
+    if (!lockSnap.exists()) {
+      throw new TestRunLockedError(
+        `No active lock found for test run ${testRunId}. Please retry your action.`,
+        'unknown'
+      );
+    }
+
+    const data = lockSnap.data();
+    const expires = data.expiresAt?.toDate() || new Date(0);
+    if (expires.getTime() <= Date.now()) {
+      // Expired lock – clean up and ask user to retry
+      await deleteDoc(lockRef);
+      localLockTokens.delete(testRunId);
+      throw new TestRunLockedError(
+        `The lock for test run ${testRunId} expired. Please start the operation again.`,
+        data.lockedBy || data.tabId
+      );
+    }
+
+    const localLockId = localLockTokens.get(testRunId);
+    if (!localLockId || data.lockId !== localLockId || data.tabId !== tabId) {
+      throw new TestRunLockedError(
+        `Test run ${testRunId} is locked by another tab.`,
+        data.lockedBy || data.tabId
+      );
+    }
+  },
+
   // Get all executions for a specific test run
   async getByTestRunId(testRunId: string): Promise<TestCaseExecution[]> {
     try {
@@ -118,9 +252,53 @@ export const testCaseExecutionsService = {
     }
   },
 
+  // Check if an execution exists for a test run and test case combination
+  async existsByTestRunAndTestCase(testRunId: string, testCaseId: string): Promise<boolean> {
+    try {
+      const q = query(
+        collection(db, COLLECTION_NAME),
+        where('testRunId', '==', testRunId),
+        where('testCaseId', '==', testCaseId)
+      );
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error('Error checking execution existence:', error);
+      throw error;
+    }
+  },
+
   // Create a new execution
   async create(execution: Omit<TestCaseExecution, 'id'>): Promise<string> {
     try {
+      // Generate unique call ID for tracking
+      const callId = Math.random().toString(36).substr(2, 9);
+      const tabId = getTabId();
+
+      await this._assertLockOwnership(execution.testRunId);
+
+      console.log(`[CREATE-${callId}][TAB-${tabId}] Starting create for testCaseId: ${execution.testCaseId}, testRunId: ${execution.testRunId}, order: ${execution.order}`);
+
+      // Check if this exact execution already exists to prevent duplicates from multiple tabs
+      const exists = await this.existsByTestRunAndTestCase(
+        execution.testRunId,
+        execution.testCaseId
+      );
+
+      if (exists) {
+        console.warn(`[CREATE-${callId}][TAB-${tabId}] DUPLICATE PREVENTED - Execution already exists for testCaseId: ${execution.testCaseId}, testRunId: ${execution.testRunId}`);
+        // Get the existing execution ID and return it
+        const q = query(
+          collection(db, COLLECTION_NAME),
+          where('testRunId', '==', execution.testRunId),
+          where('testCaseId', '==', execution.testCaseId)
+        );
+        const querySnapshot = await getDocs(q);
+        const existingId = querySnapshot.docs[0]?.id || '';
+        console.log(`[CREATE-${callId}][TAB-${tabId}] Returning existing execution ID: ${existingId}`);
+        return existingId;
+      }
+
       const docRef = await addDoc(collection(db, COLLECTION_NAME), {
         testRunId: execution.testRunId,
         testCaseId: execution.testCaseId,
@@ -131,9 +309,11 @@ export const testCaseExecutionsService = {
         notes: execution.notes || '',
         order: execution.order ?? 0,
       });
+
+      console.log(`[CREATE-${callId}][TAB-${tabId}] Successfully created doc ${docRef.id} for testCaseId: ${execution.testCaseId}`);
       return docRef.id;
     } catch (error) {
-      console.error('Error creating test case execution:', error);
+      console.error(`[CREATE-ERROR] Failed for testCaseId: ${execution.testCaseId}, testRunId: ${execution.testRunId}`, error);
       throw error;
     }
   },

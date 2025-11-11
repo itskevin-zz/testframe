@@ -18,6 +18,7 @@ import type { TestRun } from '../types/testCase';
 const COLLECTION_NAME = 'testRuns';
 const COUNTERS_COLLECTION = 'appMetadata';
 const TEST_RUN_COUNTER_DOC = 'testRunCounter';
+const MAX_ID_ATTEMPTS = 5;
 
 const formatTestRunId = (num: number) => `TR${num.toString().padStart(3, '0')}`;
 
@@ -98,17 +99,29 @@ export const testRunsService = {
     const counterRef = doc(db, COUNTERS_COLLECTION, TEST_RUN_COUNTER_DOC);
     const seedValue = await getSeedRunNumber();
 
-    const nextNumber = await runTransaction(db, async transaction => {
-      const counterSnap = await transaction.get(counterRef);
-      const currentValue = counterSnap.exists()
-        ? counterSnap.data().current ?? seedValue
-        : seedValue;
-      const next = currentValue + 1;
-      transaction.set(counterRef, { current: next });
-      return next;
-    });
+    for (let attempt = 0; attempt < MAX_ID_ATTEMPTS; attempt++) {
+      const nextNumber = await runTransaction(db, async transaction => {
+        const counterSnap = await transaction.get(counterRef);
+        const currentValue = counterSnap.exists()
+          ? counterSnap.data().current ?? seedValue
+          : seedValue;
+        const next = currentValue + 1;
+        transaction.set(counterRef, { current: next });
+        return next;
+      });
 
-    return formatTestRunId(nextNumber);
+      const candidateId = formatTestRunId(nextNumber);
+      const docRef = doc(db, COLLECTION_NAME, candidateId);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        return candidateId;
+      }
+
+      console.warn(`Generated test run ID ${candidateId} already exists. Retrying...`);
+    }
+
+    throw new Error('Unable to generate a unique test run ID. Please try again.');
   },
 
   // Create a new test run
@@ -134,6 +147,32 @@ export const testRunsService = {
       console.error('Error creating test run:', error);
       throw error;
     }
+  },
+
+  /**
+   * Create a test run while automatically handling ID generation collisions.
+   * This is useful in multi-user scenarios where another client could create
+   * the same ID between generation and document creation.
+   */
+  async createWithGeneratedId(testRun: Omit<TestRun, 'id'>): Promise<string> {
+    for (let attempt = 0; attempt < MAX_ID_ATTEMPTS; attempt++) {
+      const candidateId = await this.generateTestRunId();
+      try {
+        await this.create({
+          ...testRun,
+          id: candidateId,
+        });
+        return candidateId;
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('already exists')) {
+          console.warn(`[testRunsService] ID ${candidateId} already existed during creation. Retrying...`);
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new Error('Unable to create a unique test run. Please try again.');
   },
 
   // Update a test run
@@ -180,9 +219,6 @@ export const testRunsService = {
         throw new Error('Test run not found');
       }
 
-      // Generate a new ID
-      const newId = await this.generateTestRunId();
-
       // Use custom name if provided, otherwise append (Copy)
       const newName = customName || `${original.name} (Copy)`;
 
@@ -192,17 +228,14 @@ export const testRunsService = {
       }
 
       // Create the new test run with modified name
-      const newTestRun: TestRun = {
-        id: newId,
+      const newId = await this.createWithGeneratedId({
         name: newName,
         description: original.description,
         createdBy,
         createdAt: new Date(),
         updatedAt: new Date(),
         status: 'Not Started',
-      };
-
-      await this.create(newTestRun);
+      });
       return newId;
     } catch (error) {
       console.error('Error duplicating test run:', error);

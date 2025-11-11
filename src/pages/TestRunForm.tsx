@@ -273,21 +273,19 @@ const TestRunForm = () => {
           })
         );
       } else {
-        // Create new test run
-        const testRunId = await testRunsService.generateTestRunId();
-        lockedRunId = testRunId;
-        lockId = await testCaseExecutionsService.acquireTestRunLock(testRunId, {
-          lockedBy: user.email || 'unknown',
-          reason: 'create-test-run',
-        });
-        const testRun: TestRun = {
-          id: testRunId,
+        // Create new test run (auto retries if another client races us)
+        const testRunPayload = {
           ...formData,
           createdBy: user.email || '',
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        await testRunsService.create(testRun);
+        const testRunId = await testRunsService.createWithGeneratedId(testRunPayload);
+        lockedRunId = testRunId;
+        lockId = await testCaseExecutionsService.acquireTestRunLock(testRunId, {
+          lockedBy: user.email || 'unknown',
+          reason: 'create-test-run',
+        });
 
         console.log('[TestRunForm] New test run created - creating', uniqueSelectedTestCases.length, 'executions');
 
@@ -295,7 +293,7 @@ const TestRunForm = () => {
         await Promise.all(
           uniqueSelectedTestCases.map((tc, i) =>
             testCaseExecutionsService.create({
-              testRunId: testRun.id,
+              testRunId,
               testCaseId: tc.id,
               actualResult: '',
               status: 'Not Run' as const,

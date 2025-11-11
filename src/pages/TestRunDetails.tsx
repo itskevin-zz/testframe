@@ -216,15 +216,27 @@ const TestRunDetails = () => {
               <div className="flex space-x-4">
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Dashboard
                 </button>
                 <button
+                  onClick={() => navigate('/test-cases')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Test Cases
+                </button>
+                <button
                   onClick={() => navigate('/test-runs')}
-                  className="text-slate-900 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-stone-500"
+                  className="text-gray-900 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-blue-600"
                 >
                   Test Runs
+                </button>
+                <button
+                  onClick={() => navigate('/settings')}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  Settings
                 </button>
               </div>
             </div>

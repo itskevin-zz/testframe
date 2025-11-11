@@ -12,6 +12,7 @@ const TestRuns = () => {
   const [testRuns, setTestRuns] = useState<TestRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [stats, setStats] = useState<Map<string, { total: number; passed: number; failed: number; blocked: number; skipped: number; notRun: number }>>(new Map());
 
   // Duplicate modal state
@@ -30,6 +31,7 @@ const TestRuns = () => {
     try {
       setLoading(true);
       setError(null);
+      setSuccessMessage(null);
       const runs = await testRunsService.getAll();
       setTestRuns(runs);
 
@@ -115,6 +117,7 @@ const TestRuns = () => {
       isDuplicatingRef.current = true;
       setIsDuplicating(true);
       setError(null);
+      setSuccessMessage(null);
 
       // Additional guard check inside try block
       if (isDuplicatingRef.current !== true) {
@@ -177,11 +180,7 @@ const TestRuns = () => {
 
       // Reload the test runs to show the new one
       await loadTestRuns();
-
-      console.log('[TestRuns] Navigating to new test run');
-
-      // Navigate to the new test run
-      navigate(`/test-runs/${newTestRunId}`);
+      setSuccessMessage('Test run duplicated successfully.');
     } catch (err) {
       if (err instanceof TestRunLockedError) {
         console.warn('[TestRuns] Lock error during duplication:', err.message);
@@ -199,7 +198,7 @@ const TestRuns = () => {
         }
       }
       setIsDuplicating(false);
-      // Only reset guard after everything completes (including navigation)
+      // Only reset guard after everything completes
       setTimeout(() => {
         isDuplicatingRef.current = false;
         console.log('[TestRuns] Duplication guard reset');
@@ -293,6 +292,11 @@ const TestRuns = () => {
           {error && (
             <div className={`mb-4 ${colors.danger.bgLight} ${colors.danger.border} border ${colors.danger.textDark} px-4 py-3 rounded`}>
               {error}
+            </div>
+          )}
+          {successMessage && (
+            <div className="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded">
+              {successMessage}
             </div>
           )}
 

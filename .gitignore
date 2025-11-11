@@ -24,6 +24,4 @@ dist-ssr
 *.sw?
 .env
 .firebase-web-app.env
-
-# Temporary scripts
-scripts/
+.firebase/hosting.*.cache

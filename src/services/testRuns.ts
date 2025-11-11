@@ -131,8 +131,19 @@ export const testRunsService = {
     }
   },
 
+  // Check if a test run name already exists
+  async nameExists(name: string): Promise<boolean> {
+    try {
+      const allRuns = await this.getAll();
+      return allRuns.some(run => run.name.toLowerCase() === name.toLowerCase());
+    } catch (error) {
+      console.error('Error checking test run name:', error);
+      throw error;
+    }
+  },
+
   // Duplicate a test run (Note: test case executions are duplicated separately by the caller)
-  async duplicate(id: string, createdBy: string): Promise<string> {
+  async duplicate(id: string, createdBy: string, customName?: string): Promise<string> {
     try {
       // Get the original test run
       const original = await this.getById(id);
@@ -143,10 +154,18 @@ export const testRunsService = {
       // Generate a new ID
       const newId = await this.generateTestRunId();
 
+      // Use custom name if provided, otherwise append (Copy)
+      const newName = customName || `${original.name} (Copy)`;
+
+      // Check if name already exists
+      if (await this.nameExists(newName)) {
+        throw new Error('A test run with this name already exists');
+      }
+
       // Create the new test run with modified name
       const newTestRun: TestRun = {
         id: newId,
-        name: `${original.name} (Copy)`,
+        name: newName,
         description: original.description,
         createdBy,
         createdAt: new Date(),

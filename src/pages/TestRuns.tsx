@@ -14,6 +14,13 @@ const TestRuns = () => {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<Map<string, { total: number; passed: number; failed: number; blocked: number; skipped: number; notRun: number }>>(new Map());
 
+  // Duplicate modal state
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [duplicateSourceId, setDuplicateSourceId] = useState<string | null>(null);
+  const [newTestRunName, setNewTestRunName] = useState('');
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [isDuplicating, setIsDuplicating] = useState(false);
+
   useEffect(() => {
     loadTestRuns();
   }, []);
@@ -54,21 +61,72 @@ const TestRuns = () => {
     }
   };
 
-  const handleDuplicate = async (id: string) => {
-    if (!user?.email) {
-      setError('User not authenticated');
+  const handleDuplicate = (id: string) => {
+    // Find the original test run to get its name
+    const originalRun = testRuns.find(run => run.id === id);
+    if (originalRun) {
+      setNewTestRunName(`${originalRun.name} (Copy)`);
+    }
+    setDuplicateSourceId(id);
+    setShowDuplicateModal(true);
+    setNameError(null);
+  };
+
+  const validateName = async (name: string): Promise<boolean> => {
+    if (!name.trim()) {
+      setNameError('Test run name is required');
+      return false;
+    }
+
+    try {
+      const exists = await testRunsService.nameExists(name);
+      if (exists) {
+        setNameError('A test run with this name already exists');
+        return false;
+      }
+      setNameError(null);
+      return true;
+    } catch (err) {
+      console.error('Error validating name:', err);
+      setNameError('Failed to validate name');
+      return false;
+    }
+  };
+
+  const confirmDuplicate = async () => {
+    if (!user?.email || !duplicateSourceId) {
+      setError('User not authenticated or no test run selected');
+      return;
+    }
+
+    // Validate name before proceeding
+    const isValid = await validateName(newTestRunName);
+    if (!isValid) {
       return;
     }
 
     try {
-      // Duplicate the test run
-      const newTestRunId = await testRunsService.duplicate(id, user.email);
+      setIsDuplicating(true);
+      setError(null);
+
+      // Duplicate the test run with custom name
+      const newTestRunId = await testRunsService.duplicate(duplicateSourceId, user.email, newTestRunName);
 
       // Get the original test case executions
-      const originalExecutions = await testCaseExecutionsService.getByTestRunId(id);
+      const originalExecutions = await testCaseExecutionsService.getByTestRunId(duplicateSourceId);
+
+      // Deduplicate executions by testCaseId (in case there are duplicates in the database)
+      const seenTestCaseIds = new Set<string>();
+      const uniqueExecutions = originalExecutions.filter(execution => {
+        if (seenTestCaseIds.has(execution.testCaseId)) {
+          return false;
+        }
+        seenTestCaseIds.add(execution.testCaseId);
+        return true;
+      });
 
       // Create new executions for the duplicated test run with "Not Run" status
-      for (const execution of originalExecutions) {
+      for (const execution of uniqueExecutions) {
         await testCaseExecutionsService.create({
           testRunId: newTestRunId,
           testCaseId: execution.testCaseId,
@@ -81,6 +139,12 @@ const TestRuns = () => {
         });
       }
 
+      // Close modal and reset state
+      setShowDuplicateModal(false);
+      setDuplicateSourceId(null);
+      setNewTestRunName('');
+      setNameError(null);
+
       // Reload the test runs to show the new one
       await loadTestRuns();
 
@@ -89,7 +153,16 @@ const TestRuns = () => {
     } catch (err) {
       console.error('Error duplicating test run:', err);
       setError('Failed to duplicate test run. Please try again.');
+    } finally {
+      setIsDuplicating(false);
     }
+  };
+
+  const cancelDuplicate = () => {
+    setShowDuplicateModal(false);
+    setDuplicateSourceId(null);
+    setNewTestRunName('');
+    setNameError(null);
   };
 
   const handleSignOut = async () => {
@@ -296,6 +369,66 @@ const TestRuns = () => {
           )}
         </div>
       </main>
+
+      {/* Duplicate Modal */}
+      {showDuplicateModal && (
+        <div className="fixed inset-0 bg-slate-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <h3 className="text-lg font-medium text-slate-900 mb-4">
+                Duplicate Test Run
+              </h3>
+              <p className="text-sm text-slate-500 mb-4">
+                Enter a name for the duplicated test run. The test cases will be copied with "Not Run" status.
+              </p>
+
+              <div className="mb-4">
+                <label htmlFor="testRunName" className="block text-sm font-medium text-slate-700 mb-2">
+                  Test Run Name
+                </label>
+                <input
+                  type="text"
+                  id="testRunName"
+                  value={newTestRunName}
+                  onChange={(e) => {
+                    setNewTestRunName(e.target.value);
+                    setNameError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !isDuplicating) {
+                      confirmDuplicate();
+                    }
+                  }}
+                  className={`mt-1 block w-full px-3 py-2 border ${nameError ? 'border-rose-300' : 'border-slate-300'} rounded-md shadow-sm focus:outline-none focus:ring-stone-400 focus:border-stone-400 sm:text-sm`}
+                  placeholder="Enter test run name"
+                  disabled={isDuplicating}
+                  autoFocus
+                />
+                {nameError && (
+                  <p className="mt-2 text-sm text-rose-600">{nameError}</p>
+                )}
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={cancelDuplicate}
+                  disabled={isDuplicating}
+                  className="px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDuplicate}
+                  disabled={isDuplicating || !newTestRunName.trim()}
+                  className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${colors.primary.bg} hover:${colors.primary.bgHover} focus:outline-none focus:ring-2 focus:ring-offset-2 ${colors.primary.ring} disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {isDuplicating ? 'Duplicating...' : 'Duplicate'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

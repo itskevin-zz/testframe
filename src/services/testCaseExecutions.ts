@@ -190,4 +190,95 @@ export const testCaseExecutionsService = {
       throw error;
     }
   },
+
+  // Clean up duplicate test case executions for a test run
+  // Keeps the first occurrence (by order) and deletes duplicates
+  async cleanupDuplicates(testRunId: string): Promise<number> {
+    try {
+      const executions = await this.getByTestRunId(testRunId);
+      const seenTestCaseIds = new Set<string>();
+      const duplicatesToDelete: string[] = [];
+
+      // Find duplicates
+      for (const execution of executions) {
+        if (seenTestCaseIds.has(execution.testCaseId)) {
+          duplicatesToDelete.push(execution.id);
+        } else {
+          seenTestCaseIds.add(execution.testCaseId);
+        }
+      }
+
+      // Delete duplicates
+      for (const id of duplicatesToDelete) {
+        await this.delete(id);
+      }
+
+      return duplicatesToDelete.length;
+    } catch (error) {
+      console.error('Error cleaning up duplicate executions:', error);
+      throw error;
+    }
+  },
+
+  // Clean up duplicates across all test runs
+  async cleanupAllDuplicates(): Promise<{ testRunId: string; duplicatesRemoved: number }[]> {
+    try {
+      // Get all executions
+      const querySnapshot = await getDocs(collection(db, COLLECTION_NAME));
+
+      // Group by testRunId
+      const executionsByTestRun = new Map<string, TestCaseExecution[]>();
+      querySnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        const execution: TestCaseExecution = {
+          id: doc.id,
+          testRunId: data.testRunId,
+          testCaseId: data.testCaseId,
+          actualResult: data.actualResult,
+          status: data.status,
+          testedBy: data.testedBy,
+          executionDate: data.executionDate?.toDate() || new Date(),
+          notes: data.notes,
+          order: data.order ?? 0,
+        };
+
+        if (!executionsByTestRun.has(execution.testRunId)) {
+          executionsByTestRun.set(execution.testRunId, []);
+        }
+        executionsByTestRun.get(execution.testRunId)!.push(execution);
+      });
+
+      // Process each test run
+      const results: { testRunId: string; duplicatesRemoved: number }[] = [];
+      for (const [testRunId, executions] of executionsByTestRun) {
+        const seenTestCaseIds = new Set<string>();
+        const duplicatesToDelete: string[] = [];
+
+        // Sort by order to keep the first one
+        executions.sort((a, b) => a.order - b.order);
+
+        for (const execution of executions) {
+          if (seenTestCaseIds.has(execution.testCaseId)) {
+            duplicatesToDelete.push(execution.id);
+          } else {
+            seenTestCaseIds.add(execution.testCaseId);
+          }
+        }
+
+        // Delete duplicates
+        for (const id of duplicatesToDelete) {
+          await this.delete(id);
+        }
+
+        if (duplicatesToDelete.length > 0) {
+          results.push({ testRunId, duplicatesRemoved: duplicatesToDelete.length });
+        }
+      }
+
+      return results;
+    } catch (error) {
+      console.error('Error cleaning up all duplicates:', error);
+      throw error;
+    }
+  },
 };

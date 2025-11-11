@@ -1,74 +1,101 @@
 [
-  {
-    "component": "Student Dashboard - Conversation Status",
-    "feature": "Conversation status accuracy - 'In Progress'",
-    "testType": "Functional",
-    "priority": "P1",
-    "preconditions": "Student has conversation with status 'In Progress'\nConversation 'Friends' Central - 5Cs' has: Started date: 16 days ago, Last message: 16 days ago, Status: active, Completion: 0%",
-    "testSteps": "1. View dashboard conversation list\n2. Locate 'Friends' Central - 5Cs' conversation\n3. Verify status badge and metadata",
-    "expectedResult": "Status badge shows: 'In Progress' with yellow/amber styling\nLast Updated shows: 'Last Updated 16 days ago'\nCompletion shows: '0%'\nType badge shows: 'Open Ended'\nConversation clickable and accessible"
-  },
-  {
-    "component": "Student Dashboard - Conversation Status",
-    "feature": "Conversation status accuracy - 'Completed'",
-    "testType": "Functional",
-    "priority": "P1",
-    "preconditions": "Student has completed conversation\n'Big 5 Inventory' conversation: Completion: 100%, Status: completed, Type: Structured, Last updated: 45 days ago",
-    "testSteps": "1. View dashboard conversation list\n2. Locate 'Big 5 Inventory' conversation\n3. Verify status and completion indicators",
-    "expectedResult": "Status badge shows: 'Completed' with green styling\nCompletion shows: '100%'\nType badge shows: 'Structured' (with document icon)\nIcon shows: 'Addie Template'\nLast Updated shows: 'Last Updated 45 days ago'\nConversation remains clickable to view completed conversation"
-  },
-  {
-    "component": "Student Dashboard - Conversation Status",
-    "feature": "Conversation status accuracy - 'Not Started'",
-    "testType": "Functional",
-    "priority": "P1",
-    "preconditions": "Student has assigned but not started conversation\n'Finding Your Fit' conversation: Status: not_started, Completion: 0%, Last updated: 65 days ago (assignment date)",
-    "testSteps": "1. View dashboard conversation list\n2. Locate 'Finding Your Fit' conversation\n3. Verify status and behaviour",
-    "expectedResult": "Status badge shows: 'Not Started' with grey styling\nCompletion shows: '0%'\nType badge shows: 'Open Ended'\nLast Updated shows: 'Last Updated 65 days ago'\nClicking conversation should: Show prompt to start conversation OR Immediately start conversation with Addie"
-  },
-  {
-    "component": "Student Dashboard - Conversation Status",
-    "feature": "Empty state - new student with no conversations",
-    "testType": "Functional",
-    "priority": "P1",
-    "preconditions": "New student account just created\nNo conversations exist for student\nStudent ID: S99999",
-    "testSteps": "1. Log in as new student\n2. View dashboard\n3. Observe conversation list area",
-    "expectedResult": "Dashboard loads successfully\nConversation list shows empty state: Illustration or icon, Message: 'No conversations yet', Call to action: 'Start chatting with Addie to begin your journey', Prominent 'Chat with Addie' button\nNo error messages\nOther tabs still accessible ('My Notes', 'Teacher Comments')"
-  },
-  {
-    "component": "Student Dashboard - Conversation Interaction",
-    "feature": "Start new conversation via 'Chat with Addie' button",
-    "testType": "Functional",
-    "priority": "P0",
-    "preconditions": "Student logged in and viewing dashboard",
-    "testSteps": "1. View dashboard\n2. Click 'Chat with Addie' button (either in sidebar or top right)\n3. Observe navigation and chat interface",
-    "expectedResult": "Navigate to chat interface immediately\nNew conversation session created\nChat input field ready and focused\nWelcome message from Addie displayed (e.g., 'Hi! What would you like to talk about today?')\nStudent can start typing immediately\nSession logged in database"
-  },
-  {
-    "component": "Student Dashboard - Conversation Interaction",
-    "feature": "Continue existing conversation from dashboard",
-    "testType": "Functional",
-    "priority": "P0",
-    "preconditions": "Student has 'In Progress' conversation\n'Your College Fit' conversation exists with 10 messages",
-    "testSteps": "1. View dashboard conversation list\n2. Click on 'Your College Fit' conversation\n3. View conversation details in right panel\n4. Click 'Continue Conversation' or conversation title\n5. Observe navigation to chat interface",
-    "expectedResult": "Navigate to chat interface\nExisting conversation loaded with full history visible\nCan scroll through previous messages\nChat input ready at bottom\nLast message visible (no need to scroll to find where conversation ended)\nStudent can send new message immediately\nSession status remains 'active'\nMessage count increments when student sends message"
-  },
-  {
-    "component": "Student Dashboard - Conversation Interaction",
-    "feature": "Start assigned structured conversation (not started)",
-    "testType": "Functional",
-    "priority": "P0",
-    "preconditions": "Student logged in\nCounsellor has assigned structured conversation to student\nConversation 'Big 5 Inventory' exists with: Status: not_started, Type: Structured, Template: Addie Template, Completion: 0%",
-    "testSteps": "1. Navigate to dashboard\n2. Locate 'Big 5 Inventory' conversation with 'Not Started' status\n3. Click on conversation card\n4. Observe conversation details in right panel\n5. Click 'Start Conversation' or conversation title\n6. View chat interface",
-    "expectedResult": "Navigate to chat interface\nStructured conversation loads with: Welcome message specific to 'Big 5 Inventory', First structured question/prompt displayed, May show progress indicator (Question 1 of X), Clear structure or flow visible\nStudent can respond to first question\nResponse triggers next structured question\nConversation status updates to 'In Progress'\nstarted_at timestamp populated\nCompletion percentage begins tracking (e.g., changes from 0% to 10%)"
-  },
-  {
-    "component": "Student Dashboard - Conversation Interaction",
-    "feature": "Start assigned unstructured/open ended conversation (not started)",
-    "testType": "Functional",
-    "priority": "P0",
-    "preconditions": "Student logged in\nCounsellor has assigned open ended conversation to student\nConversation 'Finding Your Fit' exists with: Status: not_started, Type: Open Ended, Template: Addie Template or Custom, Completion: 0%",
-    "testSteps": "1. Navigate to dashboard\n2. Locate 'Finding Your Fit' conversation with 'Not Started' status\n3. Click on conversation card\n4. Observe conversation details in right panel\n5. Click 'Start Conversation' or conversation title\n6. View chat interface",
-    "expectedResult": "Navigate to chat interface\nOpen ended conversation loads with: General welcome message from Addie, Open-ended prompt (e.g., 'Let's explore what you're looking for in a college. What matters most to you?'), No rigid structure or question sequence, Conversational, flexible interaction\nStudent can respond freely\nAddie responds naturally based on student input\nConversation flows organically (not Q1, Q2, Q3 format)\nConversation status updates to 'In Progress'\nstarted_at timestamp populated\nCompletion tracked differently (time-based or counsellor-marked complete)"
-  }
+{
+"component": "Notifications Admin",
+"feature": "Create reminder for all students and send now",
+"testType": "Functional",
+"priority": "P0",
+"preconditions": "School has a default channel configured and at least one active student",
+"testSteps": "Open Notifications. Click Add Reminder. Choose All Students. Select a template. Confirm message. Click Send Now.",
+"expectedResult": "Messages are dispatched immediately using the school channel. Delivery status is shown. An entry appears in Past."
+},
+{
+"component": "Notifications Admin",
+"feature": "Create reminder for specific students and schedule",
+"testType": "Functional",
+"priority": "P0",
+"preconditions": "At least two active students exist",
+"testSteps": "Open Notifications. Click Add Reminder. Choose Specific Students and select two students. Select a template. Set a future date and time. Click Create.",
+"expectedResult": "A row appears in Upcoming with correct student count, template, date, and time. No messages are sent yet."
+},
+{
+"component": "Student Delivery",
+"feature": "Deliver at scheduled time with correct timezone",
+"testType": "Functional",
+"priority": "P0",
+"preconditions": "Reminder is scheduled for a future time in the school timezone and targeted students have valid channel details",
+"testSteps": "Wait until the scheduled time.",
+"expectedResult": "Messages are delivered within the service window. Timestamps reflect the school timezone. The entry moves to Past."
+},
+{
+"component": "Channel Routing",
+"feature": "Send using school configured channel",
+"testType": "Functional",
+"priority": "P0",
+"preconditions": "School channel is set to SMS or WhatsApp or Email",
+"testSteps": "Create a reminder and send now.",
+"expectedResult": "Messages are sent only via the configured channel. The audit log shows the channel used."
+},
+{
+"component": "Templates",
+"feature": "Variable substitution in message templates",
+"testType": "Functional",
+"priority": "P0",
+"preconditions": "Template contains variables such as student_name and cta_section",
+"testSteps": "Create a reminder using the template. Preview the message. Send the reminder.",
+"expectedResult": "Variables are resolved for each student. No raw placeholders appear in delivered messages."
+},
+{
+"component": "Scheduling",
+"feature": "Block past dated scheduling",
+"testType": "Functional",
+"priority": "P0",
+"preconditions": "None",
+"testSteps": "Attempt to schedule a reminder with a date and time in the past. Click Create.",
+"expectedResult": "A clear validation error is shown and the reminder is not created."
+},
+{
+"component": "Eligibility and Consent",
+"feature": "Respect do not contact flag",
+"testType": "Security",
+"priority": "P0",
+"preconditions": "At least one selected student is marked do not contact",
+"testSteps": "Create a reminder targeting that student and others. Send now or schedule.",
+"expectedResult": "The opted out student is skipped with a visible reason. All other eligible students receive the message."
+},
+{
+"component": "Access Control",
+"feature": "Permissions to create and send reminders",
+"testType": "Security",
+"priority": "P0",
+"preconditions": "Teacher role with read only permissions and Admin role with full permissions exist",
+"testSteps": "Log in as Teacher and attempt to add a reminder or send now. Log in as Admin and perform the same actions.",
+"expectedResult": "Teacher is blocked with a permission error. Admin is allowed to create and send."
+},
+{
+"component": "Failure Handling",
+"feature": "Surface failed messages and allow single retry",
+"testType": "Integration",
+"priority": "P0",
+"preconditions": "Provider failure is induced for one recipient",
+"testSteps": "Send a reminder. Open Failed Messages. Click Retry for the failed item.",
+"expectedResult": "Failure is visible with a reason. A successful retry moves the item to Past. If retry fails, the reason is updated."
+},
+{
+"component": "Engagement",
+"feature": "CTA or deep link opens the intended flow",
+"testType": "Functional",
+"priority": "P0",
+"preconditions": "Template includes a deep link to an Addie workflow",
+"testSteps": "Deliver the message. As the student, open the link.",
+"expectedResult": "The student lands in the intended Addie flow. The event is tracked to the notification identifier."
+},
+{
+"component": "UI List Integrity",
+"feature": "Upcoming to Past transition",
+"testType": "Functional",
+"priority": "P0",
+"preconditions": "One reminder is scheduled and another is sent now",
+"testSteps": "Send one reminder now. Wait for the scheduled reminder to fire.",
+"expectedResult": "Both reminders appear in Past with correct timestamps and final statuses. The scheduled row is removed from Upcoming."
+}
 ]

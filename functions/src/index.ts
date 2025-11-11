@@ -14,7 +14,7 @@ import * as logger from "firebase-functions/logger";
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 
-const ALLOWED_DOMAINS = ["getaddie.com"];
+const ALLOWED_DOMAINS = ["getaddie.com", "brewery.agency"];
 
 // Cloud Function to delete users with unauthorized email domains
 export const checkEmailDomain = functions.auth.user().onCreate(async (user: any) => {

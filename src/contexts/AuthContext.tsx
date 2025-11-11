@@ -17,7 +17,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const ALLOWED_DOMAINS = ['getaddie.com'];
+const ALLOWED_DOMAINS = ['getaddie.com', 'brewery.agency'];
 
 // Helper function to check if email is from allowed domain
 const isEmailAllowed = (email: string): boolean => {
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           // Sign out user with unauthorized domain
           await firebaseSignOut(auth);
           setUser(null);
-          setError('Only @getaddie.com email addresses are allowed');
+          setError('Only @getaddie.com and @brewery.agency email addresses are allowed');
           setLoading(false);
           return;
         }
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         // Sign out the user immediately
         await firebaseSignOut(auth);
         setUser(null);
-        setError('Only @getaddie.com email addresses are allowed');
+        setError('Only @getaddie.com and @brewery.agency email addresses are allowed');
         throw new Error('Unauthorized email domain');
       }
 

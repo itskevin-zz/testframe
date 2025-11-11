@@ -1,0 +1,29 @@
+[
+  {
+    "component": "User Authentication",
+    "feature": "Login with valid credentials",
+    "testType": "Functional",
+    "priority": "P0",
+    "preconditions": "User account exists in the system with valid credentials",
+    "testSteps": "1. Navigate to login page\n2. Enter valid username\n3. Enter valid password\n4. Click Login button",
+    "expectedResult": "User is successfully authenticated and redirected to dashboard"
+  },
+  {
+    "component": "User Authentication",
+    "feature": "Login with invalid credentials",
+    "testType": "Functional",
+    "priority": "P1",
+    "preconditions": "User is on the login page",
+    "testSteps": "1. Navigate to login page\n2. Enter invalid username\n3. Enter invalid password\n4. Click Login button",
+    "expectedResult": "Error message is displayed indicating invalid credentials"
+  },
+  {
+    "component": "Data Management",
+    "feature": "Create new record",
+    "testType": "Integration",
+    "priority": "P0",
+    "preconditions": "User is authenticated and has create permissions",
+    "testSteps": "1. Navigate to create page\n2. Fill in all required fields\n3. Click Save button\n4. Verify record appears in list",
+    "expectedResult": "New record is created successfully and appears in the database"
+  }
+]

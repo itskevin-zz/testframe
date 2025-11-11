@@ -54,6 +54,7 @@ const TestRuns = () => {
     }
 
     try {
+      await testCaseExecutionsService.deleteByTestRunId(id);
       await testRunsService.delete(id);
       setTestRuns(prev => prev.filter(tr => tr.id !== id));
     } catch (err) {

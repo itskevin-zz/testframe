@@ -339,6 +339,17 @@ export const testCaseExecutionsService = {
     }
   },
 
+  // Delete all executions for a given test run
+  async deleteByTestRunId(testRunId: string): Promise<void> {
+    try {
+      const executions = await this.getByTestRunId(testRunId);
+      await Promise.all(executions.map(exec => this.delete(exec.id)));
+    } catch (error) {
+      console.error('Error deleting executions for test run:', error);
+      throw error;
+    }
+  },
+
   // Get statistics for a test run
   async getTestRunStats(testRunId: string): Promise<{
     total: number;

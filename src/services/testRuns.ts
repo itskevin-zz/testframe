@@ -9,11 +9,38 @@ import {
   orderBy,
   Timestamp,
   setDoc,
+  runTransaction,
+  limit,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { TestRun } from '../types/testCase';
 
 const COLLECTION_NAME = 'testRuns';
+const COUNTERS_COLLECTION = 'appMetadata';
+const TEST_RUN_COUNTER_DOC = 'testRunCounter';
+
+const formatTestRunId = (num: number) => `TR${num.toString().padStart(3, '0')}`;
+
+const extractRunNumber = (id?: string): number => {
+  if (!id) return 0;
+  const match = id.match(/TR(\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
+};
+
+const getSeedRunNumber = async (): Promise<number> => {
+  try {
+    const q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'), limit(1));
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) {
+      return 0;
+    }
+    const lastId = snapshot.docs[0].data().id as string | undefined;
+    return extractRunNumber(lastId);
+  } catch (error) {
+    console.error('Error determining seed test run number:', error);
+    return 0;
+  }
+};
 
 export const testRunsService = {
   // Get all test runs
@@ -68,30 +95,32 @@ export const testRunsService = {
 
   // Generate a unique test run ID (TR001, TR002, etc.)
   async generateTestRunId(): Promise<string> {
-    const querySnapshot = await getDocs(
-      query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'))
-    );
+    const counterRef = doc(db, COUNTERS_COLLECTION, TEST_RUN_COUNTER_DOC);
+    const seedValue = await getSeedRunNumber();
 
-    if (querySnapshot.empty) {
-      return 'TR001';
-    }
+    const nextNumber = await runTransaction(db, async transaction => {
+      const counterSnap = await transaction.get(counterRef);
+      const currentValue = counterSnap.exists()
+        ? counterSnap.data().current ?? seedValue
+        : seedValue;
+      const next = currentValue + 1;
+      transaction.set(counterRef, { current: next });
+      return next;
+    });
 
-    const lastDoc = querySnapshot.docs[0];
-    const lastId = lastDoc.data().id as string;
-    const match = lastId.match(/TR(\d+)/);
-
-    if (match) {
-      const num = parseInt(match[1], 10) + 1;
-      return `TR${num.toString().padStart(3, '0')}`;
-    }
-
-    return 'TR001';
+    return formatTestRunId(nextNumber);
   },
 
   // Create a new test run
   async create(testRun: TestRun): Promise<string> {
     try {
-      await setDoc(doc(db, COLLECTION_NAME, testRun.id), {
+      const docRef = doc(db, COLLECTION_NAME, testRun.id);
+      const existing = await getDoc(docRef);
+      if (existing.exists()) {
+        throw new Error(`Test run with ID ${testRun.id} already exists.`);
+      }
+
+      await setDoc(docRef, {
         id: testRun.id,
         name: testRun.name,
         description: testRun.description || '',
